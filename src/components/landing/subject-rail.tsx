@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { CatalogCover } from "@/components/catalog-cover";
 import { CatalogActions } from "@/components/catalog/catalog-view";
 import { formatDuration } from "@/lib/format";
-import type { CatalogEntry } from "@/lib/exam.functions";
+import type { CatalogEntry } from "@/lib/participant-api";
 
 /**
  * The real catalog (the subjects the admin set up) as a sideways rail. Each

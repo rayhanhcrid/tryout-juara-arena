@@ -6,8 +6,8 @@ import { AppShell, useGuestName } from "@/components/app-shell";
 import { ResultView } from "@/components/result/result-view";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getResults } from "@/lib/exam.functions";
 import { readGuest } from "@/lib/exam-session";
+import { fetchResults } from "@/lib/participant-api";
 
 type HasilSearch = { baru?: boolean };
 
@@ -30,11 +30,11 @@ function HasilPage() {
   const { baru } = Route.useSearch();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const guestName = useGuestName();
-  const [token] = useState(() => readGuest()?.token ?? null);
+  const [guest] = useState(() => readGuest());
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["hasil", examId, token],
-    queryFn: () => getResults({ data: { examId, guestToken: token } }),
+    queryKey: ["hasil", examId, guest?.id ?? null],
+    queryFn: () => fetchResults(examId, guest),
   });
 
   return (

@@ -26,12 +26,18 @@ export function deviceId(): string {
   return id;
 }
 
-/** The participant who last submitted from this browser. */
-export type Guest = { nama: string; token: string };
+/**
+ * The participant who last submitted from this browser: the guest id the
+ * database issued, and the secret key only this browser knows (the database
+ * stores just its hash).
+ */
+export type Guest = { nama: string; id: string; key: string };
 
 export function readGuest(): Guest | null {
-  const g = storageGetJSON<Guest>(GUEST_KEY);
-  return g && typeof g.nama === "string" && typeof g.token === "string" ? g : null;
+  const g = storageGetJSON<Partial<Guest>>(GUEST_KEY);
+  return g && typeof g.nama === "string" && typeof g.id === "string" && typeof g.key === "string"
+    ? { nama: g.nama, id: g.id, key: g.key }
+    : null;
 }
 
 export function saveGuest(guest: Guest): void {
@@ -44,12 +50,19 @@ export function sameName(a: string, b: string): boolean {
 }
 
 /**
- * The token to send with a submission: reused only when the same name is
- * typed again, so classmates sharing a lab computer stay separate people.
+ * The saved guest to submit as: reused only when the same name is typed
+ * again, so classmates sharing a lab computer stay separate people.
  */
-export function guestTokenFor(nama: string): string | null {
+export function reusableGuest(nama: string): Guest | null {
   const g = readGuest();
-  return g && sameName(g.nama, nama) ? g.token : null;
+  return g && sameName(g.nama, nama) ? g : null;
+}
+
+/** A fresh 256-bit secret for a new guest. */
+export function newGuestKey(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export function storageGet(key: string): string | null {

@@ -8,6 +8,13 @@
       "when": 1792725328350,
       "tag": "0000_exam_tryout_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792739452009,
+      "tag": "0001_public_guest_access",
+      "breakpoints": true
     }
   ]
 }

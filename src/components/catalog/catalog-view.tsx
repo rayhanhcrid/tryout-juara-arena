@@ -16,7 +16,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { firstName, formatDuration, percent } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { CatalogEntry } from "@/lib/exam.functions";
+import type { CatalogEntry } from "@/lib/participant-api";
 
 export type CatalogItem = CatalogEntry;
 

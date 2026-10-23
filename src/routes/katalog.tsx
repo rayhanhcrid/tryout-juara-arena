@@ -3,13 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { AppShell, useGuestName } from "@/components/app-shell";
 import { CatalogView, type SessionBanner } from "@/components/catalog/catalog-view";
-import { getCatalog, type CatalogEntry } from "@/lib/exam.functions";
-import { deviceId, readGuest, readSession, sessionKeys } from "@/lib/exam-session";
+import { fetchCatalog, type CatalogEntry } from "@/lib/participant-api";
+import { deviceId, readGuest, readSession, sessionKeys, type Guest } from "@/lib/exam-session";
 
 export const Route = createFileRoute("/katalog")({
   loader: async (): Promise<{ exams: CatalogEntry[]; failed: boolean }> => {
     try {
-      const { exams } = await getCatalog({ data: { guestToken: null } });
+      const exams = await fetchCatalog(null);
       return { exams, failed: false };
     } catch {
       return { exams: [], failed: true };
@@ -37,13 +37,13 @@ function KatalogPage() {
   const guestName = useGuestName();
 
   // undefined until read on the client; null when this browser has no guest yet.
-  const [token, setToken] = useState<string | null | undefined>(undefined);
-  useEffect(() => setToken(readGuest()?.token ?? null), []);
+  const [guest, setGuest] = useState<Guest | null | undefined>(undefined);
+  useEffect(() => setGuest(readGuest()), []);
 
   const personal = useQuery({
-    queryKey: ["catalog", token],
-    enabled: !!token,
-    queryFn: () => getCatalog({ data: { guestToken: token ?? null } }),
+    queryKey: ["catalog", guest?.id ?? null],
+    enabled: !!guest,
+    queryFn: async () => ({ exams: await fetchCatalog(guest ?? null) }),
   });
   const exams = personal.data?.exams ?? loaded.exams;
 

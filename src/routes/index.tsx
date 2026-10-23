@@ -7,12 +7,12 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { StepsGallery } from "@/components/landing/steps-gallery";
 import { SubjectRail } from "@/components/landing/subject-rail";
 import { buttonVariants } from "@/components/ui/button";
-import { getCatalog, type CatalogEntry } from "@/lib/exam.functions";
+import { fetchCatalog, type CatalogEntry } from "@/lib/participant-api";
 
 export const Route = createFileRoute("/")({
   loader: async (): Promise<{ exams: CatalogEntry[] }> => {
     try {
-      return await getCatalog({ data: { guestToken: null } });
+      return { exams: await fetchCatalog(null) };
     } catch {
       // The landing must render even when the catalog cannot be read.
       return { exams: [] };

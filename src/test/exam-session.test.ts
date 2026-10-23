@@ -2,8 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   clearSession,
-  guestTokenFor,
+  newGuestKey,
   readSession,
+  reusableGuest,
   saveGuest,
   sessionKeys,
   storageSet,
@@ -70,14 +71,25 @@ describe("exam session", () => {
 });
 
 describe("guest identity", () => {
-  it("reuses the saved token only for the same name", () => {
-    saveGuest({ nama: "Nadia Putri", token: "guest-1.sig" });
-    expect(guestTokenFor("  nadia   putri ")).toBe("guest-1.sig");
+  it("reuses the saved guest only for the same name", () => {
+    saveGuest({ nama: "Nadia Putri", id: "guest-1", key: "k".repeat(64) });
+    expect(reusableGuest("  nadia   putri ")?.id).toBe("guest-1");
     // A classmate on the same lab computer becomes a separate participant.
-    expect(guestTokenFor("Raka")).toBeNull();
+    expect(reusableGuest("Raka")).toBeNull();
   });
 
-  it("has no token before anyone has submitted", () => {
-    expect(guestTokenFor("Nadia")).toBeNull();
+  it("has no guest before anyone has submitted", () => {
+    expect(reusableGuest("Nadia")).toBeNull();
+  });
+
+  it("ignores a guest saved in an older format", () => {
+    localStorage.setItem("tryout:guest", JSON.stringify({ nama: "Nadia", token: "x.y" }));
+    expect(reusableGuest("Nadia")).toBeNull();
+  });
+
+  it("makes long random keys", () => {
+    const a = newGuestKey();
+    expect(a).toMatch(/^[0-9a-f]{64}$/);
+    expect(newGuestKey()).not.toBe(a);
   });
 });

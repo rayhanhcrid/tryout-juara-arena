@@ -1,13 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileQuestion } from "lucide-react";
 import { useCallback, useState } from "react";
 import { ActivityIndicator } from "@/components/activity-indicator";
 import { ExamRunner } from "@/components/exam/exam-runner";
 import { Button } from "@/components/ui/button";
-import { getExamForTaking, submitGuestAttempt } from "@/lib/exam.functions";
-import { deviceId, guestTokenFor, readGuest, saveGuest } from "@/lib/exam-session";
+import { deviceId, readGuest } from "@/lib/exam-session";
+import { fetchExamForTaking, submitAsGuest } from "@/lib/participant-api";
 
 export const Route = createFileRoute("/ujian/$examId")({
   ssr: false,
@@ -25,27 +24,23 @@ function UjianPage() {
   const { examId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const submitFn = useServerFn(submitGuestAttempt);
   const [owner] = useState(() => deviceId());
   const [lastName] = useState(() => readGuest()?.nama ?? "");
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["exam", examId],
-    queryFn: () => getExamForTaking({ data: { examId } }),
+    queryFn: () => fetchExamForTaking(examId),
     staleTime: Infinity,
   });
 
   const onSubmit = useCallback(
     async (answers: Record<string, string>, nama: string) => {
-      const result = await submitFn({
-        data: { examId, answers, nama, guestToken: guestTokenFor(nama) },
-      });
-      saveGuest({ nama: result.nama, token: result.guestToken });
+      await submitAsGuest(examId, answers, nama);
       await queryClient.invalidateQueries({ queryKey: ["catalog"] });
       await queryClient.invalidateQueries({ queryKey: ["hasil", examId] });
       navigate({ to: "/hasil/$examId", params: { examId }, search: { baru: true }, replace: true });
     },
-    [examId, navigate, queryClient, submitFn],
+    [examId, navigate, queryClient],
   );
 
   const backToCatalog = useCallback(() => navigate({ to: "/katalog" }), [navigate]);
