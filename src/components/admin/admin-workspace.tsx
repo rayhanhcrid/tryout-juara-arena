@@ -23,6 +23,7 @@ import { OPTION_KEYS } from "@/components/exam/option-row";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDuration } from "@/lib/format";
+import { splitQuestionText } from "@/lib/question-format";
 import { cn } from "@/lib/utils";
 
 export type WorkspaceExam = {
@@ -428,6 +429,21 @@ function IconAction({
   );
 }
 
+/** The question in full; a reading passage before it is shortened to two lines. */
+function QuestionPreview({ text }: { text: string }) {
+  const { stimulus, stem } = splitQuestionText(text);
+  return (
+    <>
+      {stimulus ? (
+        <p className="line-clamp-2 pt-0.5 text-[14px] leading-[1.45] text-muted-foreground">
+          {stimulus}
+        </p>
+      ) : null}
+      <p className={cn("type-body whitespace-pre-line", stimulus ? "mt-2" : "pt-0.5")}>{stem}</p>
+    </>
+  );
+}
+
 function QuestionCard({
   question,
   index,
@@ -453,7 +469,7 @@ function QuestionCard({
           {index + 1}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="type-body whitespace-pre-line pt-0.5">{question.text}</p>
+          <QuestionPreview text={question.text} />
           {question.imageUrl ? (
             <img
               src={question.imageUrl}

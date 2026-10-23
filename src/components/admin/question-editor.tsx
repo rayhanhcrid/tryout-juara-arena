@@ -188,9 +188,17 @@ export function QuestionEditor({
               placeholder="misal: Hasil dari 12 + 8 × 2 adalah …"
               rows={4}
               aria-invalid={!!errors.text}
+              aria-describedby={errors.text ? undefined : "q-text-hint"}
               autoFocus
             />
-            {errors.text ? <p className="text-[13px] text-destructive-ink">{errors.text}</p> : null}
+            {errors.text ? (
+              <p className="text-[13px] text-destructive-ink">{errors.text}</p>
+            ) : (
+              <p id="q-text-hint" className="text-[13px] text-muted-foreground">
+                Ada bacaan panjang? Tulis bacaannya, lalu satu baris berisi --- , lalu
+                pertanyaannya. Gambar tampil di antara keduanya.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

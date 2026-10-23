@@ -214,7 +214,7 @@ A restrained Apple palette: neutral grounds, one action blue, and system colors 
 
 Centered single columns with generous air on public pages (max 1080px; hero copy max 980px), and a 1152px app container with a 20px phone gutter and 32px wide gutter. Sections alternate Page Gray and Surface White grounds with 96–128px vertical padding. The landing story: hero with the exam slab, a pinned paragraph lit word by word (a 260vh track), a three-step sequence where one sticky phone changes its screen, a bento of uneven tiles (4+2, 2+2+2, 6), then a quiet closing call to action.
 
-App screens put a large title and its one-line context at the top, then content. The exam runs in focus mode with no app chrome: a frosted bar (close, title, timer), the question column (max 768px), and on wide screens a sticky navigator panel (288px). Phones swap the panel for a bottom toolbar and a sheet. Admin is a split view (336px catalog source list plus detail) that becomes a push-navigation stack below 1024px.
+App screens put a large title and its one-line context at the top, then content. The exam runs in focus mode with no app chrome: a frosted bar (close, title, timer), the question column (max 768px), and on wide screens a sticky navigator panel (288px). A short question is set as the column's headline; a question with a reading passage (TKA style) reads passage (Body, 1.6 leading), then figure, then the question in 19–21px semibold, with numbered statements "(1) …" as a hanging list in body weight. Phones swap the panel for a bottom toolbar and a sheet. Admin is a split view (336px catalog source list plus detail) that becomes a push-navigation stack below 1024px.
 
 ## Elevation & Depth
 

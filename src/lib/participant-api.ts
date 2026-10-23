@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { newGuestKey, reusableGuest, saveGuest, type Guest } from "@/lib/exam-session";
+import { isBundledImage } from "@/lib/question-format";
 
 /**
  * Everything a participant does, through database functions callable with
@@ -83,7 +84,9 @@ export async function fetchExamForTaking(
   if (!data) return null;
   const payload = data as unknown as ExamPayload;
 
-  const paths = payload.questions.map((q) => q.image_path).filter((p): p is string => !!p);
+  const paths = payload.questions
+    .map((q) => q.image_path)
+    .filter((p): p is string => !!p && !isBundledImage(p));
   const urls = new Map<string, string>();
   if (paths.length > 0) {
     const ttl = (payload.exam.duration_minutes + 60) * 60;
@@ -97,7 +100,11 @@ export async function fetchExamForTaking(
     exam: payload.exam,
     questions: payload.questions.map(({ image_path, ...q }) => ({
       ...q,
-      imageUrl: image_path ? (urls.get(image_path) ?? null) : null,
+      imageUrl: !image_path
+        ? null
+        : isBundledImage(image_path)
+          ? image_path
+          : (urls.get(image_path) ?? null),
     })),
   };
 }

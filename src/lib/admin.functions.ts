@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { isBundledImage } from "@/lib/question-format";
 
 /**
  * Admin server functions. Every call re-verifies the admin token
@@ -171,7 +172,9 @@ export const adminGetQuestions = createServerFn({ method: "GET" })
     const questions: AdminQuestion[] = [];
     for (const q of rows ?? []) {
       let imageUrl: string | null = null;
-      if (q.image_path) {
+      if (q.image_path && isBundledImage(q.image_path)) {
+        imageUrl = q.image_path;
+      } else if (q.image_path) {
         const { data: signed } = await admin.storage
           .from("exam-images")
           .createSignedUrl(q.image_path, 3600);
@@ -234,8 +237,10 @@ async function uploadImage(
 
 /** Best effort: a leftover file is harmless, so storage errors never fail the request. */
 async function removeImages(admin: AdminClient, paths: string[]) {
-  if (paths.length === 0) return;
-  await admin.storage.from("exam-images").remove(paths);
+  // Bundled images belong to the site's files, not to storage.
+  const stored = paths.filter((p) => !isBundledImage(p));
+  if (stored.length === 0) return;
+  await admin.storage.from("exam-images").remove(stored);
 }
 
 type QuestionFields = {

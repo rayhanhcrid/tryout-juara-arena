@@ -42,6 +42,7 @@ import {
   storageSet,
 } from "@/lib/exam-session";
 import { formatClock, formatDuration } from "@/lib/format";
+import { isLongStem, splitQuestionText } from "@/lib/question-format";
 import { cn } from "@/lib/utils";
 
 export type RunnerExam = {
@@ -362,10 +363,7 @@ export function ExamRunner({
             key={current}
             className={dir === "next" ? "animate-slide-next" : "animate-slide-prev"}
           >
-            <h1 className="whitespace-pre-line font-display text-[clamp(1.375rem,1.1rem+1.1vw,1.875rem)] font-semibold leading-[1.3] tracking-[-0.022em]">
-              {q.text}
-            </h1>
-            {q.imageUrl ? <QuestionImage url={q.imageUrl} /> : null}
+            <QuestionBody text={q.text} imageUrl={q.imageUrl} />
 
             <div className="mt-8 grid gap-3" role="group" aria-label="Pilihan jawaban">
               {OPTION_KEYS.map((key) => (
@@ -706,6 +704,73 @@ function ExamIntro({
   );
 }
 
+/**
+ * A short question alone reads as a headline. A question with a reading
+ * passage (see splitQuestionText) shows passage, image, then the question.
+ */
+function QuestionBody({ text, imageUrl }: { text: string; imageUrl: string | null }) {
+  const { stimulus, stem } = splitQuestionText(text);
+  const image = imageUrl ? <QuestionImage url={imageUrl} /> : null;
+  const stemClass = isLongStem(stem)
+    ? "whitespace-pre-line text-[19px] font-semibold leading-[1.45] tracking-[-0.014em] sm:text-[21px]"
+    : "whitespace-pre-line font-display text-[clamp(1.375rem,1.1rem+1.1vw,1.875rem)] font-semibold leading-[1.3] tracking-[-0.022em]";
+
+  const heading = (
+    <h1 className={cn(stemClass, stimulus && "mt-8")}>
+      <StemLines stem={stem} />
+    </h1>
+  );
+  if (!stimulus) {
+    return (
+      <>
+        {heading}
+        {image}
+      </>
+    );
+  }
+  return (
+    <>
+      <p className="type-body whitespace-pre-line leading-[1.6] text-pretty">{stimulus}</p>
+      {image}
+      {heading}
+    </>
+  );
+}
+
+const NUMBERED = /^\((\d+)\)\s+(.*)$/;
+
+/** Numbered statements, "(1) …", read as a list in body weight under the question's lines. */
+function StemLines({ stem }: { stem: string }) {
+  const lines = stem.split(/\r?\n/);
+  if (!lines.some((l) => NUMBERED.test(l))) return <>{stem}</>;
+  return (
+    <>
+      {lines.map((line, i) => {
+        const m = NUMBERED.exec(line);
+        const prevNumbered = i > 0 && NUMBERED.test(lines[i - 1] ?? "");
+        // Space where the list starts and ends; list items sit closer together.
+        const gap = i === 0 ? "" : !!m === prevNumbered ? (m ? "mt-1.5" : "") : "mt-3";
+        if (!m) {
+          return (
+            <span key={i} className={cn("block", gap)}>
+              {line}
+            </span>
+          );
+        }
+        return (
+          <span
+            key={i}
+            className={cn("grid grid-cols-[2.25rem_1fr] font-normal tracking-[-0.012em]", gap)}
+          >
+            <span className="tabular text-muted-foreground">({m[1]})</span>
+            <span>{m[2]}</span>
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
 function QuestionImage({ url }: { url: string }) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -740,7 +805,7 @@ function QuestionImage({ url }: { url: string }) {
           alt="Gambar soal"
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
-          className="max-h-[22rem] w-auto object-contain"
+          className="max-h-[22rem] w-auto object-contain sm:max-h-[30rem]"
         />
         <span className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-white opacity-0 backdrop-blur-md transition-opacity group-hover:opacity-100">
           <ZoomIn className="h-4 w-4" />
