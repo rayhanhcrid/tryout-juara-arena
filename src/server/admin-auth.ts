@@ -1,44 +1,32 @@
 /**
  * Admin session tokens for the code-gated admin dashboard.
  *
- * The admin area is unlocked with a shared access code (stored server-side
- * as the ADMIN_ACCESS_CODE secret). On success the server issues a short
- * lived HMAC-signed token; every admin server function re-verifies it, so a
- * stolen UI flag grants nothing. Tokens expire after 12 hours.
+ * The admin area is unlocked with an access code. The built-in code is the
+ * owner's chosen password, stored here only as a SHA-256 hash; an
+ * ADMIN_ACCESS_CODE secret, when set, is accepted as well. On success the
+ * server issues a short-lived HMAC-signed token (signed with a server-only
+ * key, so knowing the code does not let anyone forge tokens). Every admin
+ * server function re-verifies it. Tokens expire after 12 hours.
  */
+import { hmacHex, safeEqual, sha256Hex, signingSecret } from "@/server/hmac";
+
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
 
-function adminSecret(): string {
-  return process.env["ADMIN_ACCESS_CODE"] ?? "";
-}
+/** sha256 of the owner-chosen admin password. */
+const DEFAULT_CODE_SHA256 = "1cae6fd4b9ab2654c54db44446a8ff0f0a972f6ee27cd4b31af0fbf1ec661eac";
 
-async function hmac(message: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(adminSecret()),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
-  return Array.from(new Uint8Array(mac))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
+async function codeMatches(code: string): Promise<boolean> {
+  const envCode = process.env["ADMIN_ACCESS_CODE"];
+  if (envCode && safeEqual(code, envCode)) return true;
+  return safeEqual(await sha256Hex(code), DEFAULT_CODE_SHA256);
 }
 
 /** Returns a token when the code matches, otherwise null. */
 export async function createAdminToken(code: string): Promise<string | null> {
-  const secret = adminSecret();
-  if (!secret || code !== secret) return null;
+  const secret = signingSecret();
+  if (!secret || !(await codeMatches(code))) return null;
   const exp = String(Date.now() + TOKEN_TTL_MS);
-  return `${exp}.${await hmac(exp)}`;
+  return `${exp}.${await hmacHex(secret, `admin:${exp}`)}`;
 }
 
 export async function verifyAdminToken(token: string | undefined | null): Promise<boolean> {
@@ -49,7 +37,7 @@ export async function verifyAdminToken(token: string | undefined | null): Promis
   const sig = token.slice(dot + 1);
   const exp = Number(expStr);
   if (!Number.isFinite(exp) || exp <= Date.now()) return false;
-  const secret = adminSecret();
+  const secret = signingSecret();
   if (!secret) return false;
-  return safeEqual(sig, await hmac(expStr));
+  return safeEqual(sig, await hmacHex(secret, `admin:${expStr}`));
 }

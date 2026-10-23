@@ -14,4 +14,17 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
+
+  // Every participant page is public now: no account, no auth layout in between.
+  it.each([
+    ["/admin", "/admin"],
+    ["/katalog", "/katalog"],
+    ["/peringkat/abc", "/peringkat/$examId"],
+    ["/ujian/abc", "/ujian/$examId"],
+    ["/hasil/abc", "/hasil/$examId"],
+  ])("matches %s", (path, routeId) => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    expect(router.matchRoutes(path).at(-1)?.routeId).toBe(routeId);
+  });
 });

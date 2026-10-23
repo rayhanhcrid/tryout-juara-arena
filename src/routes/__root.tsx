@@ -12,26 +12,25 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
+import { AppIcon } from "@/components/brand";
+import { buttonVariants } from "@/components/ui/button";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-5">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Halaman tidak ditemukan</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Halaman yang kamu cari tidak ada atau sudah dipindahkan.
+        <AppIcon size={56} className="mx-auto" />
+        <p className="tabular mt-8 font-display text-[7rem] font-bold leading-none tracking-[-0.06em] text-tertiary">
+          404
         </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Kembali ke beranda
-          </Link>
-        </div>
+        <h1 className="type-title-2 mt-4">Halaman ini tidak ada.</h1>
+        <p className="type-body mt-3 text-muted-foreground">
+          Mungkin alamatnya salah ketik, atau halamannya sudah dipindahkan.
+        </p>
+        <Link to="/" className={buttonVariants({ size: "lg", className: "mt-8" })}>
+          Kembali ke beranda
+        </Link>
       </div>
     </div>
   );
@@ -45,29 +44,25 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-5">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          Halaman ini gagal dimuat
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Ada yang salah di sisi kami. Coba muat ulang atau kembali ke beranda.
+        <AppIcon size={56} className="mx-auto" />
+        <h1 className="type-title-2 mt-8">Halaman ini gagal dimuat.</h1>
+        <p className="type-body mt-3 text-muted-foreground">
+          Ada yang salah di sisi kami. Coba muat ulang, atau kembali ke beranda.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className={buttonVariants({ size: "lg" })}
           >
             Coba lagi
           </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Kembali ke beranda
+          <a href="/" className={buttonVariants({ size: "lg", variant: "secondary" })}>
+            Ke beranda
           </a>
         </div>
       </div>
@@ -79,12 +74,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#f5f5f7" },
       { title: "TryOutKu — Try Out Ujian Online" },
-      { name: "description", content: "Platform try out ujian online dengan katalog ujian, timer, skor otomatis, dan leaderboard." },
+      {
+        name: "description",
+        content:
+          "Platform try out ujian online dengan katalog ujian, timer, skor otomatis, dan leaderboard.",
+      },
       { name: "author", content: "TryOutKu" },
       { property: "og:title", content: "TryOutKu — Try Out Ujian Online" },
-      { property: "og:description", content: "Ikuti try out, lihat skormu, dan bersaing di leaderboard." },
+      {
+        property: "og:description",
+        content: "Ikuti try out, lihat skormu, dan bersaing di leaderboard.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -93,7 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap",
       },
       {
         rel: "stylesheet",
@@ -124,23 +127,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
-
-  // Single global auth listener: refresh router + queries on identity changes only.
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-    });
-    return () => subscription.unsubscribe();
-  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-      <Toaster richColors position="top-center" />
+      <Toaster position="top-center" />
     </QueryClientProvider>
   );
 }

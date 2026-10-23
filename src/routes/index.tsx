@@ -1,119 +1,118 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import heroImage from "@/assets/hero.png";
+import { ChevronRight } from "lucide-react";
+import { AppIcon } from "@/components/brand";
+import { HeroStage } from "@/components/landing/hero-stage";
+import { Highlights } from "@/components/landing/highlights";
+import { SiteHeader } from "@/components/landing/site-header";
+import { StepsGallery } from "@/components/landing/steps-gallery";
+import { SubjectRail } from "@/components/landing/subject-rail";
+import { buttonVariants } from "@/components/ui/button";
+import { getCatalog, type CatalogEntry } from "@/lib/exam.functions";
 
 export const Route = createFileRoute("/")({
+  loader: async (): Promise<{ exams: CatalogEntry[] }> => {
+    try {
+      return await getCatalog({ data: { guestToken: null } });
+    } catch {
+      // The landing must render even when the catalog cannot be read.
+      return { exams: [] };
+    }
+  },
   head: () => ({
     meta: [
       { title: "TryOutKu — Try Out Ujian Online dengan Leaderboard" },
-      { name: "description", content: "Pilih katalog try out, kerjakan soal dengan timer, lihat skor otomatis, dan bersaing di leaderboard." },
+      {
+        name: "description",
+        content:
+          "Pilih mata pelajaran, tulis namamu, kerjakan soal dengan timer, lalu lihat skor dan peringkatmu. Tanpa daftar akun.",
+      },
       { property: "og:title", content: "TryOutKu — Try Out Ujian Online dengan Leaderboard" },
-      { property: "og:description", content: "Ikuti try out, lihat skormu, dan bersaing di leaderboard." },
+      {
+        property: "og:description",
+        content: "Pilih mata pelajaran, tulis namamu, dan bersaing di papan peringkat.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#000000" },
     ],
   }),
   component: Index,
 });
 
-const features = [
-  {
-    emoji: "📚",
-    title: "Pilih katalog ujian",
-    text: "Pilih mata ujian yang mau kamu ikuti, lengkap dengan jumlah soal dan durasinya.",
-  },
-  {
-    emoji: "⏱️",
-    title: "Timer otomatis",
-    text: "Waktu pengerjaan diatur ketat. Saat waktu habis, jawabanmu terkirim otomatis.",
-  },
-  {
-    emoji: "🏆",
-    title: "Skor & leaderboard",
-    text: "Skor dihitung otomatis begitu kamu submit, dan hasilnya masuk papan peringkat.",
-  },
-];
-
 function Index() {
+  const { exams } = Route.useLoaderData();
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground">
-            T
-          </span>
-          <span className="font-display text-xl font-bold tracking-tight">TryOutKu</span>
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link to="/admin" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            Admin
-          </Link>
-          <Button asChild>
-            <Link to="/auth">Masuk</Link>
-          </Button>
-        </div>
-      </header>
+    <div className="page-dark dark min-h-screen bg-background">
+      <SiteHeader />
 
       <main>
-        <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 pb-16 pt-8 lg:grid-cols-2 lg:gap-6">
-          <div>
-            <Badge variant="secondary" className="mb-4">
-              Platform try out online
-            </Badge>
-            <h1 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-              Latihan ujian, <span className="gold-underline">skormu</span>, papan peringkat.
+        {/* overflow-x-clip, not overflow-hidden: a scroll container here would capture the stage's view() timeline */}
+        <section className="overflow-x-clip pb-20 pt-[calc(52px+4.5rem)] sm:pb-28 sm:pt-[calc(52px+6rem)]">
+          <div className="mx-auto max-w-[980px] px-5 text-center sm:px-8">
+            <h1 className="type-hero animate-rise">
+              <span className="block">Latihan ujian.</span>
+              <span className="block text-tertiary">Rasanya seperti hari H.</span>
             </h1>
-            <p className="mt-5 max-w-md text-base text-muted-foreground sm:text-lg">
-              Ikuti try out sesuai katalog yang tersedia, kerjakan soal dalam waktu yang ditentukan,
-              lalu lihat langsung skor akhirnya. Hasilmu otomatis masuk leaderboard.
+            <p className="type-lead animate-rise mx-auto mt-6 max-w-[36rem] text-muted-foreground [animation-delay:120ms]">
+              Pilih mata pelajaran, tulis namamu, lalu kerjakan soal dengan waktu yang terus
+              berjalan. Tanpa daftar akun.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg" asChild>
-                <Link to="/auth">Mulai Sekarang</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/auth">Sudah punya akun? Masuk</Link>
-              </Button>
+            <div className="animate-rise mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 [animation-delay:220ms]">
+              <Link to="/katalog" className={buttonVariants({ size: "lg" })}>
+                Pilih mata pelajaran
+              </Link>
+              <a
+                href="#cara-kerja"
+                className="inline-flex items-center gap-0.5 text-[17px] text-link hover:underline"
+              >
+                Lihat cara kerjanya <ChevronRight className="h-4 w-4" />
+              </a>
             </div>
           </div>
-          <div className="relative">
-            <div className="paper-lines rounded-3xl border border-border bg-card p-3 ink-shadow">
-              <img
-                src={heroImage}
-                alt="Ilustrasi siswa mengerjakan try out"
-                width={1600}
-                height={1200}
-                className="w-full rounded-2xl"
-              />
-            </div>
+
+          <div className="mt-12 px-4 sm:mt-14 sm:px-8">
+            <HeroStage />
+            <p className="mx-auto mt-8 max-w-md text-center type-footnote text-muted-foreground">
+              Ujian di layar ini bisa kamu coba. Soalnya dari katalog contoh, dan tidak ada yang
+              disimpan.
+            </p>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-20">
-          <div className="grid gap-5 md:grid-cols-3">
-            {features.map((f) => (
-              <Card key={f.title} className="border-border bg-card">
-                <CardContent className="p-6">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-xl">
-                    {f.emoji}
-                  </div>
-                  <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{f.text}</p>
-                </CardContent>
-              </Card>
-            ))}
+        <SubjectRail exams={exams} />
+        <StepsGallery />
+        <Highlights />
+
+        <section className="bg-background py-28 text-center sm:py-36">
+          <div className="mx-auto max-w-[980px] px-5 sm:px-8">
+            <AppIcon size={72} className="mx-auto" />
+            <h2 className="type-title-1 mx-auto mt-8 max-w-[16ch]">
+              Waktumu dimulai saat kamu siap.
+            </h2>
+            <p className="type-lead mx-auto mt-5 max-w-[30rem] text-muted-foreground">
+              Tidak perlu akun. Pilih mata pelajaran, tulis namamu, dan mulai.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+              <Link to="/katalog" className={buttonVariants({ size: "lg" })}>
+                Pilih mata pelajaran
+              </Link>
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-border py-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 text-sm text-muted-foreground">
-          <span>© {new Date().getFullYear()} TryOutKu</span>
-          <Link to="/admin" className="transition-colors hover:text-foreground">
-            Masuk sebagai admin
-          </Link>
+      <footer className="border-t border-hairline bg-background">
+        <div className="mx-auto flex max-w-[1080px] flex-col gap-4 px-5 py-8 text-[12px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <p>© {new Date().getFullYear()} TryOutKu. Latihan ujian online.</p>
+          <nav className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Tautan kaki">
+            <Link to="/katalog" className="hover:text-foreground hover:underline">
+              Katalog
+            </Link>
+            <Link to="/admin" className="hover:text-foreground hover:underline">
+              Panel admin
+            </Link>
+          </nav>
         </div>
       </footer>
     </div>

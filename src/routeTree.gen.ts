@@ -10,19 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedHasilExamIdRouteImport } from './routes/_authenticated/hasil.$examId'
-import { Route as AuthenticatedUjianExamIdRouteImport } from './routes/_authenticated/ujian.$examId'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as KatalogRouteImport } from './routes/katalog'
+import { Route as PeringkatRouteImport } from './routes/peringkat'
+import { Route as HasilExamIdRouteImport } from './routes/hasil.$examId'
+import { Route as PeringkatIndexRouteImport } from './routes/peringkat.index'
+import { Route as PeringkatExamIdRouteImport } from './routes/peringkat.$examId'
+import { Route as UjianExamIdRouteImport } from './routes/ujian.$examId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -30,66 +35,125 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedHasilExamIdRoute =
-  AuthenticatedHasilExamIdRouteImport.update({
-    id: '/hasil/$examId',
-    path: '/hasil/$examId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedUjianExamIdRoute =
-  AuthenticatedUjianExamIdRouteImport.update({
-    id: '/ujian/$examId',
-    path: '/ujian/$examId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
+const KatalogRoute = KatalogRouteImport.update({
+  id: '/katalog',
+  path: '/katalog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PeringkatRoute = PeringkatRouteImport.update({
+  id: '/peringkat',
+  path: '/peringkat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HasilExamIdRoute = HasilExamIdRouteImport.update({
+  id: '/hasil/$examId',
+  path: '/hasil/$examId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PeringkatIndexRoute = PeringkatIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PeringkatRoute,
+} as any)
+const PeringkatExamIdRoute = PeringkatExamIdRouteImport.update({
+  id: '/$examId',
+  path: '/$examId',
+  getParentRoute: () => PeringkatRoute,
+} as any)
+const UjianExamIdRoute = UjianExamIdRouteImport.update({
+  id: '/ujian/$examId',
+  path: '/ujian/$examId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
-  '/hasil/$examId': typeof AuthenticatedHasilExamIdRoute
-  '/ujian/$examId': typeof AuthenticatedUjianExamIdRoute
+  '/dashboard': typeof DashboardRoute
+  '/katalog': typeof KatalogRoute
+  '/peringkat': typeof PeringkatRouteWithChildren
+  '/hasil/$examId': typeof HasilExamIdRoute
+  '/peringkat/$examId': typeof PeringkatExamIdRoute
+  '/ujian/$examId': typeof UjianExamIdRoute
+  '/peringkat/': typeof PeringkatIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
-  '/hasil/$examId': typeof AuthenticatedHasilExamIdRoute
-  '/ujian/$examId': typeof AuthenticatedUjianExamIdRoute
+  '/dashboard': typeof DashboardRoute
+  '/katalog': typeof KatalogRoute
+  '/hasil/$examId': typeof HasilExamIdRoute
+  '/peringkat/$examId': typeof PeringkatExamIdRoute
+  '/ujian/$examId': typeof UjianExamIdRoute
+  '/peringkat': typeof PeringkatIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/hasil/$examId': typeof AuthenticatedHasilExamIdRoute
-  '/_authenticated/ujian/$examId': typeof AuthenticatedUjianExamIdRoute
+  '/dashboard': typeof DashboardRoute
+  '/katalog': typeof KatalogRoute
+  '/peringkat': typeof PeringkatRouteWithChildren
+  '/hasil/$examId': typeof HasilExamIdRoute
+  '/peringkat/$examId': typeof PeringkatExamIdRoute
+  '/ujian/$examId': typeof UjianExamIdRoute
+  '/peringkat/': typeof PeringkatIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/hasil/$examId' | '/ujian/$examId'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/dashboard'
+    | '/katalog'
+    | '/peringkat'
+    | '/hasil/$examId'
+    | '/peringkat/$examId'
+    | '/ujian/$examId'
+    | '/peringkat/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/hasil/$examId' | '/ujian/$examId'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/dashboard'
+    | '/katalog'
+    | '/hasil/$examId'
+    | '/peringkat/$examId'
+    | '/ujian/$examId'
+    | '/peringkat'
   id:
     | '__root__'
     | '/'
-    | '/_authenticated'
+    | '/admin'
     | '/auth'
-    | '/_authenticated/dashboard'
-    | '/_authenticated/hasil/$examId'
-    | '/_authenticated/ujian/$examId'
+    | '/dashboard'
+    | '/katalog'
+    | '/peringkat'
+    | '/hasil/$examId'
+    | '/peringkat/$examId'
+    | '/ujian/$examId'
+    | '/peringkat/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  DashboardRoute: typeof DashboardRoute
+  KatalogRoute: typeof KatalogRoute
+  PeringkatRoute: typeof PeringkatRouteWithChildren
+  HasilExamIdRoute: typeof HasilExamIdRoute
+  UjianExamIdRoute: typeof UjianExamIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -101,11 +165,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -115,49 +179,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
+    '/dashboard': {
+      id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/hasil/$examId': {
-      id: '/_authenticated/hasil/$examId'
+    '/katalog': {
+      id: '/katalog'
+      path: '/katalog'
+      fullPath: '/katalog'
+      preLoaderRoute: typeof KatalogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/peringkat': {
+      id: '/peringkat'
+      path: '/peringkat'
+      fullPath: '/peringkat'
+      preLoaderRoute: typeof PeringkatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hasil/$examId': {
+      id: '/hasil/$examId'
       path: '/hasil/$examId'
       fullPath: '/hasil/$examId'
-      preLoaderRoute: typeof AuthenticatedHasilExamIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof HasilExamIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/ujian/$examId': {
-      id: '/_authenticated/ujian/$examId'
+    '/peringkat/': {
+      id: '/peringkat/'
+      path: '/'
+      fullPath: '/peringkat/'
+      preLoaderRoute: typeof PeringkatIndexRouteImport
+      parentRoute: typeof PeringkatRoute
+    }
+    '/peringkat/$examId': {
+      id: '/peringkat/$examId'
+      path: '/$examId'
+      fullPath: '/peringkat/$examId'
+      preLoaderRoute: typeof PeringkatExamIdRouteImport
+      parentRoute: typeof PeringkatRoute
+    }
+    '/ujian/$examId': {
+      id: '/ujian/$examId'
       path: '/ujian/$examId'
       fullPath: '/ujian/$examId'
-      preLoaderRoute: typeof AuthenticatedUjianExamIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof UjianExamIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface AuthenticatedRouteRouteChildren {
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedHasilExamIdRoute: typeof AuthenticatedHasilExamIdRoute
-  AuthenticatedUjianExamIdRoute: typeof AuthenticatedUjianExamIdRoute
+interface PeringkatRouteChildren {
+  PeringkatExamIdRoute: typeof PeringkatExamIdRoute
+  PeringkatIndexRoute: typeof PeringkatIndexRoute
 }
 
-const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedHasilExamIdRoute: AuthenticatedHasilExamIdRoute,
-  AuthenticatedUjianExamIdRoute: AuthenticatedUjianExamIdRoute,
+const PeringkatRouteChildren: PeringkatRouteChildren = {
+  PeringkatExamIdRoute: PeringkatExamIdRoute,
+  PeringkatIndexRoute: PeringkatIndexRoute,
 }
 
-const AuthenticatedRouteRouteWithChildren =
-  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+const PeringkatRouteWithChildren = PeringkatRoute._addFileChildren(
+  PeringkatRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  DashboardRoute: DashboardRoute,
+  KatalogRoute: KatalogRoute,
+  PeringkatRoute: PeringkatRouteWithChildren,
+  HasilExamIdRoute: HasilExamIdRoute,
+  UjianExamIdRoute: UjianExamIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

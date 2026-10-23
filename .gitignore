@@ -20,6 +20,10 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Impeccable design tooling: local captures and hook cache
+.impeccable/review/
+.impeccable/hook.cache.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

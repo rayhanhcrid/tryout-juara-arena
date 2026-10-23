@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-10-23T04:17:28.703Z",
+        "reason": "agent decision from the owner's pinned brief (Apple style): SF Pro is the primary face via -apple-system; Inter is only its open fallback for non-Apple devices, recorded in DESIGN.md"
+      }
+    ]
+  }
+}

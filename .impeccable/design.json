@@ -1,0 +1,680 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-23T04:48:31.041Z",
+  "title": "Design System: TryOutKu",
+  "extensions": {
+    "colorMeta": {
+      "action-blue": {
+        "role": "primary",
+        "displayName": "Action Blue",
+        "canonical": "#0071e3",
+        "oklch": "oklch(56.3% 0.193 256.2)",
+        "tonalRamp": [
+          "#000829",
+          "#00235b",
+          "#004192",
+          "#0061cd",
+          "#2786fa",
+          "#62afff",
+          "#96d4ff",
+          "#c0f2ff"
+        ]
+      },
+      "action-blue-hover": {
+        "role": "primary",
+        "displayName": "Action Blue, Hover",
+        "canonical": "#0077ed",
+        "oklch": "oklch(58.3% 0.199 256.0)",
+        "tonalRamp": [
+          "#00082a",
+          "#00225c",
+          "#004093",
+          "#0061cf",
+          "#1f86fd",
+          "#5fafff",
+          "#94d4ff",
+          "#bff2ff"
+        ]
+      },
+      "link-blue": {
+        "role": "primary",
+        "displayName": "Link Blue",
+        "canonical": "#0066cc",
+        "oklch": "oklch(52.2% 0.177 255.8)",
+        "tonalRamp": [
+          "#000927",
+          "#002457",
+          "#00428c",
+          "#0363c5",
+          "#3388f1",
+          "#68b0ff",
+          "#9ad4ff",
+          "#c3f2ff"
+        ]
+      },
+      "link-blue-on-dark": {
+        "role": "primary",
+        "displayName": "Link Blue on Dark",
+        "canonical": "#2997ff",
+        "oklch": "oklch(66.9% 0.181 251.8)",
+        "tonalRamp": [
+          "#000927",
+          "#002557",
+          "#00448c",
+          "#0065c5",
+          "#148af1",
+          "#5bb2ff",
+          "#92d6ff",
+          "#bef4ff"
+        ]
+      },
+      "page-gray": {
+        "role": "neutral",
+        "displayName": "Page Gray",
+        "canonical": "#f5f5f7",
+        "oklch": "oklch(97.1% 0.003 286.4)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#262628",
+          "#454546",
+          "#666667",
+          "#89898b",
+          "#aeaeaf",
+          "#d1d1d3",
+          "#eeeef0"
+        ]
+      },
+      "surface-white": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#262626",
+          "#454545",
+          "#666666",
+          "#898989",
+          "#aeaeae",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1d1d1f",
+        "oklch": "oklch(23.2% 0.004 286.1)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#262628",
+          "#454547",
+          "#666668",
+          "#89898b",
+          "#adadb0",
+          "#d1d1d3",
+          "#eeeef1"
+        ]
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Ink Secondary",
+        "canonical": "#6e6e73",
+        "oklch": "oklch(54.0% 0.008 286.1)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#26262a",
+          "#444449",
+          "#65656a",
+          "#88888e",
+          "#adadb3",
+          "#d0d0d6",
+          "#eeeef4"
+        ]
+      },
+      "ink-tertiary": {
+        "role": "neutral",
+        "displayName": "Ink Tertiary",
+        "canonical": "#86868b",
+        "oklch": "oklch(62.2% 0.007 286.2)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#26262a",
+          "#444449",
+          "#65656a",
+          "#88888e",
+          "#adadb2",
+          "#d0d0d6",
+          "#eeeef3"
+        ]
+      },
+      "control-gray": {
+        "role": "neutral",
+        "displayName": "Control Gray",
+        "canonical": "#e8e8ed",
+        "oklch": "oklch(93.2% 0.007 286.3)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#26262a",
+          "#454449",
+          "#66666a",
+          "#89898d",
+          "#adadb2",
+          "#d0d0d5",
+          "#eeeef3"
+        ]
+      },
+      "control-gray-pressed": {
+        "role": "neutral",
+        "displayName": "Control Gray Pressed",
+        "canonical": "#dcdce1",
+        "oklch": "oklch(89.6% 0.007 286.3)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#26262a",
+          "#454449",
+          "#66666a",
+          "#89898d",
+          "#adadb2",
+          "#d0d0d5",
+          "#eeeef3"
+        ]
+      },
+      "rule-gray": {
+        "role": "neutral",
+        "displayName": "Rule Gray",
+        "canonical": "#d2d2d7",
+        "oklch": "oklch(86.5% 0.007 286.3)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#26262a",
+          "#454449",
+          "#66656a",
+          "#89898d",
+          "#adadb2",
+          "#d0d0d5",
+          "#eeeef3"
+        ]
+      },
+      "answered-green": {
+        "role": "tertiary",
+        "displayName": "Answered Green",
+        "canonical": "#34c759",
+        "oklch": "oklch(73.0% 0.194 147.4)",
+        "tonalRamp": [
+          "#001200",
+          "#003300",
+          "#005801",
+          "#008011",
+          "#00a638",
+          "#57ca6c",
+          "#92e99e",
+          "#bfffc6"
+        ]
+      },
+      "answered-green-ink": {
+        "role": "tertiary",
+        "displayName": "Answered Green Ink",
+        "canonical": "#1f7a35",
+        "oklch": "oklch(51.1% 0.134 147.4)",
+        "tonalRamp": [
+          "#001100",
+          "#00310b",
+          "#09541f",
+          "#1f7a35",
+          "#499f58",
+          "#76c381",
+          "#a6e3ac",
+          "#ccfed1"
+        ]
+      },
+      "time-orange": {
+        "role": "tertiary",
+        "displayName": "Time Orange",
+        "canonical": "#ff9500",
+        "oklch": "oklch(76.5% 0.175 62.6)",
+        "tonalRamp": [
+          "#1d0200",
+          "#471400",
+          "#752c00",
+          "#a64600",
+          "#d06a00",
+          "#f19533",
+          "#ffbf79",
+          "#ffe1ab"
+        ]
+      },
+      "time-orange-ink": {
+        "role": "tertiary",
+        "displayName": "Time Orange Ink",
+        "canonical": "#b33900",
+        "oklch": "oklch(51.8% 0.167 38.8)",
+        "tonalRamp": [
+          "#200000",
+          "#4b0b00",
+          "#7b2100",
+          "#af3802",
+          "#da5d32",
+          "#fb8a65",
+          "#ffb697",
+          "#ffdac1"
+        ]
+      },
+      "alert-red": {
+        "role": "tertiary",
+        "displayName": "Alert Red",
+        "canonical": "#ff3b30",
+        "oklch": "oklch(65.4% 0.232 28.7)",
+        "tonalRamp": [
+          "#250000",
+          "#550000",
+          "#8b0000",
+          "#c50000",
+          "#f63027",
+          "#ff7362",
+          "#ffa796",
+          "#ffcfc0"
+        ]
+      },
+      "alert-red-ink": {
+        "role": "tertiary",
+        "displayName": "Alert Red Ink",
+        "canonical": "#d70015",
+        "oklch": "oklch(55.3% 0.225 27.3)",
+        "tonalRamp": [
+          "#240000",
+          "#540000",
+          "#8a0000",
+          "#c3000c",
+          "#f33532",
+          "#ff7568",
+          "#ffa89a",
+          "#ffd0c3"
+        ]
+      },
+      "medal-gold": {
+        "role": "secondary",
+        "displayName": "Medal Gold",
+        "canonical": "#e3a500",
+        "oklch": "oklch(76.1% 0.157 81.4)",
+        "tonalRamp": [
+          "#180600",
+          "#3d1f00",
+          "#653a00",
+          "#915800",
+          "#b87c00",
+          "#daa431",
+          "#f6ca79",
+          "#ffe9aa"
+        ]
+      },
+      "medal-silver": {
+        "role": "secondary",
+        "displayName": "Medal Silver",
+        "canonical": "#98989d",
+        "oklch": "oklch(68.1% 0.007 286.2)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#26262a",
+          "#444449",
+          "#65656a",
+          "#89898d",
+          "#adadb2",
+          "#d0d0d6",
+          "#eeeef3"
+        ]
+      },
+      "medal-bronze": {
+        "role": "secondary",
+        "displayName": "Medal Bronze",
+        "canonical": "#c2733a",
+        "oklch": "oklch(63.2% 0.123 54.1)",
+        "tonalRamp": [
+          "#1b0300",
+          "#421900",
+          "#6d3200",
+          "#9a4f0c",
+          "#c1733a",
+          "#e69a67",
+          "#ffc198",
+          "#ffe2c0"
+        ]
+      },
+      "black-panel": {
+        "role": "neutral",
+        "displayName": "Black Panel",
+        "canonical": "#000000",
+        "oklch": "oklch(0.0% 0.000 0.0)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#262626",
+          "#454545",
+          "#666666",
+          "#898989",
+          "#aeaeae",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "night-ground": {
+        "role": "neutral",
+        "displayName": "Night Ground",
+        "canonical": "#000000",
+        "oklch": "oklch(0.0% 0.000 0.0)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#262626",
+          "#454545",
+          "#666666",
+          "#898989",
+          "#aeaeae",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Night Surface",
+        "canonical": "#1c1c1e",
+        "oklch": "oklch(22.7% 0.004 286.1)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#262628",
+          "#454547",
+          "#666668",
+          "#89898b",
+          "#adadb0",
+          "#d1d1d3",
+          "#eeeef1"
+        ]
+      },
+      "night-control": {
+        "role": "neutral",
+        "displayName": "Night Control",
+        "canonical": "#2c2c2e",
+        "oklch": "oklch(29.4% 0.004 286.2)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#262628",
+          "#454547",
+          "#666668",
+          "#89898b",
+          "#adaeb0",
+          "#d1d1d3",
+          "#eeeef1"
+        ]
+      },
+      "night-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "#f5f5f7",
+        "oklch": "oklch(97.1% 0.003 286.4)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#262628",
+          "#454546",
+          "#666667",
+          "#89898b",
+          "#aeaeaf",
+          "#d1d1d3",
+          "#eeeef0"
+        ]
+      },
+      "night-ink-secondary": {
+        "role": "neutral",
+        "displayName": "Night Ink Secondary",
+        "canonical": "#a1a1a6",
+        "oklch": "oklch(71.1% 0.007 286.2)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#26262a",
+          "#444449",
+          "#65656a",
+          "#89898d",
+          "#adadb2",
+          "#d0d0d6",
+          "#eeeef3"
+        ]
+      },
+      "night-ink-tertiary": {
+        "role": "neutral",
+        "displayName": "Night Ink Tertiary",
+        "canonical": "#6e6e73",
+        "oklch": "oklch(54.0% 0.008 286.1)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#26262a",
+          "#444449",
+          "#65656a",
+          "#88888e",
+          "#adadb3",
+          "#d0d0d6",
+          "#eeeef4"
+        ]
+      },
+      "fill-translucent": {
+        "role": "neutral",
+        "displayName": "Fill Translucent",
+        "canonical": "rgb(120 120 128 / 0.12)"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgb(0 0 0 / 0.08)"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The landing hero only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Large page titles, section openers, exam titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sub-sections, result headline."
+      },
+      "title-small": {
+        "displayName": "Title Small",
+        "purpose": "Dialog, sheet and empty-state titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Reading text and answer options."
+      },
+      "callout": {
+        "displayName": "Callout",
+        "purpose": "Descriptions inside cards and dialogs."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Metadata, legends, counters; tabular figures."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card",
+        "value": "0 1px 2px rgb(0 0 0 / 0.04), 0 8px 28px -12px rgb(0 0 0 / 0.12)",
+        "purpose": "Every resting surface."
+      },
+      {
+        "name": "lift",
+        "value": "0 2px 4px rgb(0 0 0 / 0.04), 0 22px 48px -18px rgb(0 0 0 / 0.22)",
+        "purpose": "Catalog card hover, with a 2px rise."
+      },
+      {
+        "name": "float",
+        "value": "0 12px 30px -10px rgb(0 0 0 / 0.14), 0 40px 100px -30px rgb(0 0 0 / 0.3)",
+        "purpose": "Exam slab, phone frames, dialogs, sheets, menus, toasts."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-apple",
+        "value": "cubic-bezier(0.32, 0.72, 0, 1)",
+        "purpose": "Sheets, segmented thumb, press feedback, timer morph."
+      },
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Entrances and question slides."
+      },
+      {
+        "name": "slab-untilt",
+        "value": "rotateX(26deg) scale(0.86) -> none over view() entry 0% to cover 42%",
+        "purpose": "Landing exam slab flattens as it scrolls in."
+      },
+      {
+        "name": "word-light",
+        "value": "tertiary 32% -> ink 100% per word over a 260vh pinned track",
+        "purpose": "Landing statement lit word by word."
+      },
+      {
+        "name": "exam-timer",
+        "value": "view-transition-name: exam-timer, 0.6s ease-apple",
+        "purpose": "Intro ring morphs into the running timer pill."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one primary action per view.",
+      "html": "<button class=\"ds-btn-primary\">Mulai try out</button>",
+      "css": ".ds-btn-primary{background:var(--color-primary,#0071e3);color:#fff;height:40px;padding:0 20px;border:0;border-radius:9999px;font:500 15px/1 -apple-system,BlinkMacSystemFont,Inter,sans-serif;letter-spacing:-0.01em;cursor:pointer;transition:background-color .2s cubic-bezier(.32,.72,0,1),transform .2s cubic-bezier(.32,.72,0,1)}.ds-btn-primary:hover{background:var(--color-primary-hover,#0077ed)}.ds-btn-primary:active{transform:scale(.97)}.ds-btn-primary:focus-visible{outline:3px solid rgb(0 113 227 / .5);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Back, cancel, and low-emphasis actions.",
+      "html": "<button class=\"ds-btn-secondary\">Periksa lagi</button>",
+      "css": ".ds-btn-secondary{background:#e8e8ed;color:#1d1d1f;height:40px;padding:0 20px;border:0;border-radius:9999px;font:500 15px/1 -apple-system,BlinkMacSystemFont,Inter,sans-serif;cursor:pointer;transition:background-color .2s}.ds-btn-secondary:hover{background:#dcdce1}.ds-btn-secondary:active{transform:scale(.97)}.ds-btn-secondary:focus-visible{outline:3px solid rgb(0 113 227 / .5);outline-offset:2px}"
+    },
+    {
+      "name": "Chevron Link",
+      "kind": "custom",
+      "refersTo": "button-tinted",
+      "description": "Every secondary next step: blue text with a trailing chevron.",
+      "html": "<a class=\"ds-link\" href=\"#\">Sudah punya akun? Masuk <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 18 6-6-6-6\"/></svg></a>",
+      "css": ".ds-link{display:inline-flex;align-items:center;gap:2px;color:#0066cc;font:400 17px/1.4 -apple-system,BlinkMacSystemFont,Inter,sans-serif;text-decoration:none}.ds-link:hover{text-decoration:underline;text-underline-offset:4px}.ds-link:focus-visible{outline:3px solid rgb(0 113 227 / .5);outline-offset:2px;border-radius:6px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Single field with a blue focus ring.",
+      "html": "<input class=\"ds-input\" placeholder=\"misal: Try Out Bahasa Inggris\" />",
+      "css": ".ds-input{height:44px;width:280px;padding:0 14px;border:1px solid #d2d2d7;border-radius:18px;background:#fff;color:#1d1d1f;font:400 15px/1 -apple-system,BlinkMacSystemFont,Inter,sans-serif;caret-color:#0071e3;outline:none;transition:border-color .2s,box-shadow .2s}.ds-input::placeholder{color:#6e6e73}.ds-input:focus-visible{border-color:#0071e3;box-shadow:0 0 0 4px rgb(0 113 227 / .15)}"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "nav",
+      "refersTo": "segmented-control",
+      "description": "iOS segmented control with a sliding white thumb.",
+      "html": "<div class=\"ds-seg\"><span class=\"ds-seg-thumb\"></span><button class=\"ds-seg-on\">Masuk</button><button>Daftar</button></div>",
+      "css": ".ds-seg{position:relative;display:grid;grid-template-columns:1fr 1fr;width:240px;height:36px;padding:2px;border-radius:10px;background:rgb(120 120 128 / .12)}.ds-seg-thumb{position:absolute;top:2px;bottom:2px;left:2px;width:calc(50% - 2px);border-radius:8px;background:#fff;box-shadow:0 3px 8px rgb(0 0 0 / .12),0 3px 1px rgb(0 0 0 / .04)}.ds-seg button{position:relative;z-index:1;border:0;background:none;font:500 13px/1 -apple-system,BlinkMacSystemFont,Inter,sans-serif;color:rgb(29 29 31 / .7);cursor:pointer}.ds-seg button:hover{color:#1d1d1f}.ds-seg .ds-seg-on{font-weight:600;color:#1d1d1f}"
+    },
+    {
+      "name": "Answer Option",
+      "kind": "custom",
+      "refersTo": "option-row",
+      "description": "Exam answer row; selected state shows a blue hairline and checkmark.",
+      "html": "<button class=\"ds-opt\"><span class=\"ds-opt-l\">A</span>40</button><button class=\"ds-opt ds-opt-on\"><span class=\"ds-opt-l\">B</span>28<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#0071e3\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"margin-left:auto\"><path d=\"M20 6 9 17l-5-5\"/></svg></button>",
+      "css": ".ds-opt{display:flex;align-items:center;gap:16px;width:360px;margin:6px 0;padding:14px 16px;border:1px solid rgb(0 0 0 / .08);border-radius:22px;background:#fff;color:#1d1d1f;font:400 17px/1.4 -apple-system,BlinkMacSystemFont,Inter,sans-serif;text-align:left;cursor:pointer;transition:background-color .2s,border-color .2s,box-shadow .2s}.ds-opt:hover{border-color:#d2d2d7;background:#f7f7f9}.ds-opt:focus-visible{outline:3px solid rgb(0 113 227 / .5);outline-offset:2px}.ds-opt-l{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:rgb(120 120 128 / .12);color:#6e6e73;font-size:14px;font-weight:600}.ds-opt-on{border-color:#0071e3;background:rgb(0 113 227 / .06);box-shadow:0 0 0 1px #0071e3}.ds-opt-on .ds-opt-l{background:#0071e3;color:#fff}"
+    },
+    {
+      "name": "Timer Pill",
+      "kind": "chip",
+      "refersTo": "timer-pill",
+      "description": "Running clock; orange under five minutes, red in the last minute.",
+      "html": "<span class=\"ds-timer\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 18 18\" style=\"transform:rotate(-90deg)\"><circle cx=\"9\" cy=\"9\" r=\"6.5\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\".2\" stroke-width=\"2.5\"/><circle cx=\"9\" cy=\"9\" r=\"6.5\" fill=\"none\" stroke=\"#ff9500\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-dasharray=\"40.8\" stroke-dashoffset=\"30\"/></svg>03:39</span>",
+      "css": ".ds-timer{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px 0 10px;border-radius:9999px;background:rgb(255 149 0 / .15);color:#b33900;font:600 15px/1 -apple-system,BlinkMacSystemFont,Inter,sans-serif;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Surface Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "White rounded surface on the gray ground, soft long shadow, no border.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-card-t\">Skor terbaikmu</p><p class=\"ds-card-b\">4/5 · 80%</p></div>",
+      "css": ".ds-card{width:300px;padding:20px;border-radius:28px;background:#fff;box-shadow:0 1px 2px rgb(0 0 0 / .04),0 8px 28px -12px rgb(0 0 0 / .12);transition:box-shadow .3s cubic-bezier(.32,.72,0,1),transform .3s cubic-bezier(.32,.72,0,1)}.ds-card:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgb(0 0 0 / .04),0 22px 48px -18px rgb(0 0 0 / .22)}.ds-card-t{margin:0;font:400 13px/1.4 -apple-system,BlinkMacSystemFont,Inter,sans-serif;color:#6e6e73}.ds-card-b{margin:4px 0 0;font:700 22px/1.2 -apple-system,BlinkMacSystemFont,Inter,sans-serif;letter-spacing:-0.03em;color:#1d1d1f;font-variant-numeric:tabular-nums}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Exam Hall",
+    "overview": "TryOutKu looks and behaves like a first-party Apple product, in two worlds. The landing page and the score moment are dark and cinematic: a black ground, iOS dark surfaces, and app screens glowing inside device frames. The working pages (catalog, exam, leaderboard, admin) are light: pale gray and white grounds, near-black ink. One action blue carries every primary action in both. The exam interface is treated as the product: the landing shows it the way Apple shows hardware, on a laptop whose lid opens as you scroll and whose screen runs a playable exam, flanked by a tablet (the catalog) and a phone (the score). The app screens borrow iOS and macOS structure (large titles, grouped inset lists, sheets, segmented controls, a source-list sidebar) so a visitor knows where everything is before noticing the style.\n\nDensity is low on public pages and moderate in the app. Color is reserved for state: green for answered and correct, orange for remaining time and \"ragu-ragu\" (unsure), red for the last minute and destructive actions, gold, silver and bronze for the top three ranks. Each catalog gets an iOS-hue cover with a cropped monogram, because there are no uploaded covers.\n\nThe old look (cream paper, Lora serif, gold underline, emoji icons) is retired and should not come back.",
+    "keyCharacteristics": [
+      "SF Pro on Apple devices, Inter elsewhere, set big and tight with tabular numerals for time and scores.",
+      "Pill buttons; text links with a chevron for secondary actions.",
+      "White rounded surfaces on a #f5f5f7 ground, separated by soft long shadows, not borders.",
+      "A frosted 52px bar over scrolling content; an iOS tab bar on phones.",
+      "One authored motion moment per surface: the slab tilting flat, words lighting up on scroll, the timer ring turning into a pill, the score ring filling."
+    ],
+    "rules": [
+      {
+        "name": "The Two Worlds Rule",
+        "body": "Dark is for looking (the landing, the score moment); light is for working (catalog, exam, leaderboard, admin). App screens shown on the dark landing stay light, as a light island inside the dark page.",
+        "section": "colors"
+      },
+      {
+        "name": "The State-Only Color Rule",
+        "body": "Green, orange, red and the medal colors appear only where they carry meaning. A decorative use of them is a bug.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-On-Tint Rule",
+        "body": "Small text on a colored fill uses the matching -ink color or plain ink, never white on orange, gold or green.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Eyebrow Rule",
+        "body": "Nothing sits above a heading: no kicker, no \"Langkah 1\", no \"Soal 3\". If the information matters, it belongs in the bar, the heading itself, or below it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Clock Rule",
+        "body": "Anything that ticks or ranks uses tabular numerals so digits do not jump.",
+        "section": "typography"
+      },
+      {
+        "name": "The Material-Has-A-Job Rule",
+        "body": "Frosted blur (saturate(180%) blur(20px) on 78% white) is used only for bars and overlays that float over moving content, never as decoration on a static card.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use exactly one Action Blue primary action per view, and show other actions as text links with a chevron.",
+      "Do keep the exam screen chrome-free: a bar with close, title and timer, the question, and the navigator.",
+      "Do give every horizontal snap rail the same scroll-padding-inline as its padding, so the first card lines up with the heading.",
+      "Do label demonstration data as an example (\"Contoh\", \"Tampilan contoh\") wherever it could be mistaken for real data.",
+      "Do keep content visible without JavaScript or scroll-timeline support; scroll-driven motion is progressive enhancement under @supports (animation-timeline: view()) and prefers-reduced-motion: no-preference.",
+      "Do use overflow-x: clip, not overflow: hidden, on ancestors of scroll-timeline elements, so the timeline still tracks the viewport."
+    ],
+    "donts": [
+      "Don't put working pages (catalog, exam, admin) in the dark world, or the landing in the light one.",
+      "Don't put a kicker or eyebrow label above any heading.",
+      "Don't use emoji or Unicode glyphs as icons; use Lucide icons at a consistent stroke.",
+      "Don't reintroduce the retired cream-paper look: Lora or other serif display, gold underlines, warm paper grounds.",
+      "Don't use gradient text, colored side stripes on cards, or hard offset shadows.",
+      "Don't put white small text on orange, gold or green fills; use the matching -ink color."
+    ]
+  }
+}
