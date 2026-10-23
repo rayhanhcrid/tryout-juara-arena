@@ -14,7 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attempts: {
+        Row: {
+          answers: Json
+          exam_id: string
+          id: string
+          score: number
+          submitted_at: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          exam_id: string
+          id?: string
+          score?: number
+          submitted_at?: string
+          total?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          exam_id?: string
+          id?: string
+          score?: number
+          submitted_at?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attempts_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          created_at: string
+          description: string
+          duration_minutes: number
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          duration_minutes?: number
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration_minutes?: number
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          nama: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          nama?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nama?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          correct_option: string
+          exam_id: string
+          id: string
+          image_path: string | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          order_index: number
+          text: string
+        }
+        Insert: {
+          correct_option: string
+          exam_id: string
+          id?: string
+          image_path?: string | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          order_index?: number
+          text: string
+        }
+        Update: {
+          correct_option?: string
+          exam_id?: string
+          id?: string
+          image_path?: string | null
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          order_index?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
