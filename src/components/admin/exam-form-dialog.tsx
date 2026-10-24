@@ -11,10 +11,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-export type ExamFormValues = { title: string; description: string; duration_minutes: number };
+export type ExamFormValues = {
+  title: string;
+  description: string;
+  duration_minutes: number;
+  featured: boolean;
+};
 
 const PRESETS = [15, 30, 45, 60, 90, 120];
 
@@ -33,6 +39,7 @@ export function ExamFormDialog({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState(30);
+  const [featured, setFeatured] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +48,7 @@ export function ExamFormDialog({
     setTitle(initial?.title ?? "");
     setDescription(initial?.description ?? "");
     setDuration(initial?.duration_minutes ?? 30);
+    setFeatured(initial?.featured ?? false);
     setError(null);
   }, [open, initial]);
 
@@ -55,6 +63,7 @@ export function ExamFormDialog({
         title: title.trim(),
         description: description.trim(),
         duration_minutes: duration,
+        featured,
       });
       onOpenChange(false);
     } catch (err) {
@@ -143,6 +152,21 @@ export function ExamFormDialog({
                 </button>
               ))}
             </div>
+          </div>
+          <div className="flex items-start justify-between gap-4 rounded-xl bg-fill px-4 py-3">
+            <div>
+              <Label htmlFor="exam-featured">Tampilkan paling awal</Label>
+              <p id="exam-featured-hint" className="mt-0.5 text-[13px] text-muted-foreground">
+                Katalog yang disematkan muncul pertama di beranda dan halaman Katalog.
+              </p>
+            </div>
+            <Switch
+              id="exam-featured"
+              checked={featured}
+              onCheckedChange={setFeatured}
+              aria-describedby="exam-featured-hint"
+              className="mt-0.5"
+            />
           </div>
           {error ? (
             <p role="alert" className="text-[13px] text-destructive-ink">

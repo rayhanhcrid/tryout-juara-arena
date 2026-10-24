@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { toast } from "sonner";
 import { ActivityIndicator } from "@/components/activity-indicator";
+import { CoverPhotoImage, catalogCoverClass, coverPhotoOf } from "@/components/catalog-cover";
 import { FieldGroup, FloatingField } from "@/components/form-fields";
 import { NavigatorGrid, NavigatorLegend, type CellState } from "@/components/exam/navigator-grid";
 import { OPTION_KEYS, OptionRow, type OptionKey } from "@/components/exam/option-row";
@@ -290,7 +291,8 @@ export function ExamRunner({
 
   if (phase === "submitting" || phase === "failed") {
     return (
-      <div className="flex min-h-screen items-center justify-center px-6">
+      <div className="relative isolate flex min-h-screen items-center justify-center px-6">
+        <ExamAmbient exam={exam} />
         <div className="max-w-sm text-center" aria-live="polite">
           {phase === "submitting" ? (
             <>
@@ -325,7 +327,8 @@ export function ExamRunner({
   const flagged = !!flags[q.id];
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="relative isolate flex min-h-screen flex-col">
+      <ExamAmbient exam={exam} />
       {/* Focus bar */}
       <header className="material-bar sticky top-0 z-30 border-b border-hairline">
         <div className="mx-auto flex h-[60px] max-w-6xl items-center gap-3 px-4 sm:px-6">
@@ -337,6 +340,7 @@ export function ExamRunner({
           >
             <X className="h-4 w-4" strokeWidth={2.5} />
           </button>
+          <SubjectThumb exam={exam} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold tracking-[-0.015em]">{exam.title}</p>
             <p className="tabular text-[12px] text-muted-foreground">
@@ -358,7 +362,8 @@ export function ExamRunner({
       </header>
 
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 pb-32 pt-8 sm:px-6 sm:pt-12 lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-12 lg:pb-16">
-        <main className="mx-auto w-full max-w-3xl">
+        {/* The question sits on its own sheet, so the coloured room never touches the reading. */}
+        <main className="mx-auto w-full max-w-3xl overflow-hidden rounded-[28px] bg-card p-5 shadow-[var(--shadow-float)] sm:p-8 lg:self-start lg:p-10">
           <div
             key={current}
             className={dir === "next" ? "animate-slide-next" : "animate-slide-prev"}
@@ -592,15 +597,12 @@ function ExamIntro({
   const clean = name.trim().replace(/\s+/g, " ").slice(0, 40);
   const valid = clean.length >= 2;
 
-  const size = 236;
-  const stroke = 16;
+  const size = 168;
+  const stroke = 12;
   const r = (size - stroke) / 2;
+  const photo = coverPhotoOf(exam.title);
   const facts = [
-    { icon: FileText, text: `${count} soal pilihan ganda, A sampai D` },
-    {
-      icon: Timer,
-      text: `${formatDuration(exam.duration_minutes)}, mulai berjalan begitu kamu menekan Mulai`,
-    },
+    { icon: Timer, text: "Waktu mulai berjalan begitu kamu menekan Mulai" },
     { icon: Flag, text: "Tandai soal ragu-ragu, cek lagi sebelum kirim" },
     { icon: RotateCw, text: "Jawaban tersimpan walau halaman ter-refresh" },
     { icon: Send, text: "Waktu habis? Jawabanmu terkirim otomatis" },
@@ -613,94 +615,161 @@ function ExamIntro({
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col px-5 py-4">
-      <div>
+    <div className="page-dark dark relative isolate flex min-h-screen flex-col bg-background">
+      {/* The subject's photograph fills the screen; the hue stands in while it loads. */}
+      <div
+        aria-hidden
+        className={cn(
+          "fixed inset-0 -z-20 overflow-hidden",
+          catalogCoverClass(exam.id, exam.title),
+        )}
+      >
+        {photo ? <CoverPhotoImage photo={photo} eager className="intro-photo" /> : null}
+      </div>
+      <div aria-hidden className="intro-scrim fixed inset-0 -z-10" />
+
+      <div className="mx-auto w-full max-w-6xl px-5 pt-4 sm:px-8">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex cursor-pointer items-center gap-0.5 rounded-full px-1 py-2 text-[15px] text-link hover:underline"
+          className="inline-flex cursor-pointer items-center gap-0.5 rounded-full px-1 py-2 text-[15px] text-white/85 transition-colors hover:text-white"
         >
           <ChevronLeft className="h-4 w-4" /> Katalog
         </button>
       </div>
-      <div className="flex flex-1 flex-col items-center justify-center py-10 text-center">
-        <div
-          className="relative animate-rise"
-          style={
-            { width: size, height: size, viewTransitionName: "exam-timer" } as React.CSSProperties
-          }
-        >
-          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={r}
-              fill="none"
-              strokeWidth={stroke}
-              className="stroke-primary"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="tabular font-display text-[52px] font-semibold tracking-[-0.04em]">
-              {formatClock(exam.duration_minutes * 60_000)}
-            </span>
-            <span className="text-[13px] text-muted-foreground">siap dimulai</span>
+
+      <div className="mx-auto grid w-full max-w-6xl flex-1 content-end gap-10 px-5 pb-10 pt-[16vh] sm:px-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:content-center lg:items-center lg:gap-16 lg:pb-16 lg:pt-8">
+        <div className="animate-rise">
+          <div className="flex flex-wrap gap-2">
+            <IntroChip icon={FileText}>{count} soal pilihan ganda</IntroChip>
+            <IntroChip icon={Timer}>{formatDuration(exam.duration_minutes)}</IntroChip>
           </div>
+          <h1 className="mt-5 font-display text-[clamp(2.5rem,1.5rem+3.8vw,4.75rem)] font-bold leading-[1.02] tracking-[-0.036em] text-white">
+            {exam.title}
+          </h1>
+          {exam.description ? (
+            <p className="type-lead mt-5 max-w-xl text-white/80">{exam.description}</p>
+          ) : null}
+          <ul className="mt-8 hidden max-w-xl gap-x-6 gap-y-3 sm:grid sm:grid-cols-2">
+            {facts.map((f) => (
+              <li
+                key={f.text}
+                className="flex items-start gap-2.5 text-[14px] leading-[1.4] text-white/75"
+              >
+                <f.icon aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-white/60" />
+                {f.text}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <h1 className="type-title-1 mt-10">{exam.title}</h1>
-        {exam.description ? (
-          <p className="type-lead mt-4 max-w-xl text-muted-foreground">{exam.description}</p>
-        ) : null}
-
-        <form onSubmit={handleSubmit} className="mt-10 w-full max-w-md text-left" noValidate>
-          <FieldGroup shake={false}>
-            <FloatingField
-              label="Namamu"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={() => setTouched(true)}
-              autoComplete="name"
-              maxLength={40}
-              autoFocus={!defaultName}
-              aria-invalid={touched && !valid}
-              aria-describedby="nama-hint"
-            />
-          </FieldGroup>
-          <p
-            id="nama-hint"
-            className={cn(
-              "mt-2 px-1 text-[13px]",
-              touched && !valid ? "text-destructive-ink" : "text-muted-foreground",
-            )}
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="intro-panel animate-rise w-full rounded-[28px] p-6 [animation-delay:120ms] sm:p-7"
+        >
+          <div
+            className="relative mx-auto"
+            style={
+              { width: size, height: size, viewTransitionName: "exam-timer" } as React.CSSProperties
+            }
           >
-            {touched && !valid
-              ? "Tulis namamu dulu, minimal 2 huruf."
-              : "Nama ini yang tampil di papan peringkat."}
-          </p>
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={r}
+                fill="none"
+                strokeWidth={stroke}
+                className="stroke-primary"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span
+                className={cn(
+                  "tabular font-display font-semibold tracking-[-0.04em]",
+                  exam.duration_minutes >= 60 ? "text-[30px]" : "text-[40px]",
+                )}
+              >
+                {formatClock(exam.duration_minutes * 60_000)}
+              </span>
+              <span className="text-[13px] text-muted-foreground">siap dimulai</span>
+            </div>
+          </div>
+
+          <div className="mt-7">
+            <FieldGroup shake={false}>
+              <FloatingField
+                label="Namamu"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={() => setTouched(true)}
+                autoComplete="name"
+                maxLength={40}
+                autoFocus={!defaultName}
+                aria-invalid={touched && !valid}
+                aria-describedby="nama-hint"
+              />
+            </FieldGroup>
+            <p
+              id="nama-hint"
+              className={cn(
+                "mt-2 px-1 text-[13px]",
+                touched && !valid ? "text-destructive-ink" : "text-muted-foreground",
+              )}
+            >
+              {touched && !valid
+                ? "Tulis namamu dulu, minimal 2 huruf."
+                : "Nama ini yang tampil di papan peringkat."}
+            </p>
+          </div>
           <Button type="submit" size="lg" className="mt-6 w-full" disabled={touched && !valid}>
             Mulai ujian
           </Button>
         </form>
-
-        <ul className="mt-10 w-full max-w-md overflow-hidden rounded-2xl bg-card text-left shadow-[var(--shadow-card)]">
-          {facts.map((f, i) => (
-            <li key={f.text} className="relative flex items-center gap-3.5 px-4 py-3.5">
-              {i > 0 ? (
-                <span
-                  aria-hidden
-                  className="absolute inset-x-0 top-0 ml-[3.25rem] h-px bg-hairline"
-                />
-              ) : null}
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <f.icon className="h-4 w-4" />
-              </span>
-              <span className="type-callout">{f.text}</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
+  );
+}
+
+function IntroChip({ icon: Icon, children }: { icon: typeof Timer; children: React.ReactNode }) {
+  return (
+    <span className="tabular inline-flex items-center gap-1.5 rounded-full bg-white/14 px-3 py-1.5 text-[13px] font-medium text-white backdrop-blur-md">
+      <Icon aria-hidden className="h-3.5 w-3.5" />
+      {children}
+    </span>
+  );
+}
+
+/**
+ * While answering, the subject's photograph stays in the room: blurred far
+ * past recognition and washed almost to the page gray, so it tints without
+ * ever competing with the question.
+ */
+function ExamAmbient({ exam }: { exam: RunnerExam }) {
+  const photo = coverPhotoOf(exam.title);
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div className={cn("absolute inset-0", catalogCoverClass(exam.id, exam.title))}>
+        {photo ? <CoverPhotoImage photo={photo} eager className="ambient-photo" /> : null}
+      </div>
+      <div className="absolute inset-0 bg-background/[0.52]" />
+    </div>
+  );
+}
+
+function SubjectThumb({ exam }: { exam: RunnerExam }) {
+  const photo = coverPhotoOf(exam.title);
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "relative hidden h-9 w-9 shrink-0 overflow-hidden rounded-[10px] shadow-[inset_0_0_0_0.5px_rgb(0_0_0/0.1)] sm:block",
+        catalogCoverClass(exam.id, exam.title),
+      )}
+    >
+      {photo ? <CoverPhotoImage photo={photo} eager /> : null}
+    </span>
   );
 }
 

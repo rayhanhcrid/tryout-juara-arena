@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { AppIcon } from "@/components/brand";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { Highlights } from "@/components/landing/highlights";
+import { PhotoWall } from "@/components/landing/photo-wall";
 import { SiteHeader } from "@/components/landing/site-header";
 import { StepsGallery } from "@/components/landing/steps-gallery";
 import { SubjectRail } from "@/components/landing/subject-rail";
@@ -41,6 +42,8 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { exams } = Route.useLoaderData();
+  // Same rule SubjectRail uses to decide whether it renders at all.
+  const hasSubjects = exams.some((e) => e.questionCount > 0);
 
   return (
     <div className="page-dark dark min-h-screen bg-background">
@@ -48,7 +51,9 @@ function Index() {
 
       <main>
         {/* overflow-x-clip, not overflow-hidden: a scroll container here would capture the stage's view() timeline */}
-        <section className="overflow-x-clip pb-20 pt-[calc(52px+4.5rem)] sm:pb-28 sm:pt-[calc(52px+6rem)]">
+        <section className="relative isolate overflow-x-clip pb-20 pt-[calc(52px+4.5rem)] sm:pb-28 sm:pt-[calc(52px+6rem)]">
+          <PhotoWall rows={5} />
+          <div aria-hidden className="hero-scrim pointer-events-none absolute inset-0 -z-10" />
           <div className="mx-auto max-w-[980px] px-5 text-center sm:px-8">
             <h1 className="type-hero animate-rise">
               <span className="block">Latihan ujian.</span>
@@ -59,9 +64,16 @@ function Index() {
               berjalan. Tanpa daftar akun.
             </p>
             <div className="animate-rise mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 [animation-delay:220ms]">
-              <Link to="/katalog" className={buttonVariants({ size: "lg" })}>
-                Pilih mata pelajaran
-              </Link>
+              {/* The subjects are right below; the full catalog page is one more step. */}
+              {hasSubjects ? (
+                <a href="#mata-pelajaran" className={buttonVariants({ size: "lg" })}>
+                  Pilih mata pelajaran
+                </a>
+              ) : (
+                <Link to="/katalog" className={buttonVariants({ size: "lg" })}>
+                  Pilih mata pelajaran
+                </Link>
+              )}
               <a
                 href="#cara-kerja"
                 className="inline-flex items-center gap-0.5 text-[17px] text-link hover:underline"
@@ -84,7 +96,9 @@ function Index() {
         <StepsGallery />
         <Highlights />
 
-        <section className="bg-background py-28 text-center sm:py-36">
+        <section className="relative isolate overflow-hidden bg-background py-28 text-center sm:py-36">
+          <PhotoWall rows={3} />
+          <div aria-hidden className="cta-scrim pointer-events-none absolute inset-0 -z-10" />
           <div className="mx-auto max-w-[980px] px-5 sm:px-8">
             <AppIcon size={72} className="mx-auto" />
             <h2 className="type-title-1 mx-auto mt-8 max-w-[16ch]">

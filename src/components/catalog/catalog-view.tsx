@@ -12,6 +12,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { CatalogCover } from "@/components/catalog-cover";
 import { TimerPill } from "@/components/exam/timer-pill";
+import { PhotoCredits } from "@/components/photo-credits";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { firstName, formatDuration, percent } from "@/lib/format";
@@ -126,12 +127,14 @@ export function CatalogView({
           </p>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((item) => (
-              <CatalogCard key={item.id} item={item} />
+            {filtered.map((item, i) => (
+              <CatalogCard key={item.id} item={item} eager={i < 3} />
             ))}
           </div>
         )}
       </div>
+
+      {!loading && items.length > 0 ? <PhotoCredits className="mt-16" /> : null}
     </div>
   );
 }
@@ -144,13 +147,13 @@ function CoverChip({ children }: { children: React.ReactNode }) {
   );
 }
 
-function CatalogCard({ item }: { item: CatalogItem }) {
+function CatalogCard({ item, eager }: { item: CatalogItem; eager: boolean }) {
   const best = item.myBest;
   const pct = best ? percent(best.score, best.total) : 0;
   const empty = item.questionCount === 0;
   return (
     <article className="surface group flex flex-col overflow-hidden transition-[box-shadow,transform] duration-300 ease-apple hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]">
-      <CatalogCover id={item.id} title={item.title} className="aspect-[16/9]">
+      <CatalogCover id={item.id} title={item.title} eager={eager} className="aspect-[16/9]">
         <div className="absolute left-4 top-4 flex gap-1.5">
           <CoverChip>
             <FileText className="h-3 w-3" /> {item.questionCount} soal

@@ -11,6 +11,7 @@ import {
   ListPlus,
   Lock,
   Pencil,
+  Pin,
   Plus,
   Search,
   Trash2,
@@ -31,6 +32,7 @@ export type WorkspaceExam = {
   title: string;
   description: string;
   duration_minutes: number;
+  featured: boolean;
   questionCount: number;
   attemptCount: number;
 };
@@ -237,8 +239,17 @@ function ExamSidebar({
                       <CoverMark title={exam.title} className="h-5 w-5 text-[17px]" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[15px] font-semibold tracking-[-0.012em]">
-                        {exam.title}
+                      <span className="flex items-center gap-1.5 text-[15px] font-semibold tracking-[-0.012em]">
+                        <span className="truncate">{exam.title}</span>
+                        {exam.featured ? (
+                          <Pin
+                            aria-label="Disematkan di awal"
+                            className={cn(
+                              "h-3.5 w-3.5 shrink-0 fill-current",
+                              active ? "text-primary-foreground" : "text-primary",
+                            )}
+                          />
+                        ) : null}
                       </span>
                       <span
                         className={cn(

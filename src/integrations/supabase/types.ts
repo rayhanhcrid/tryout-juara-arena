@@ -68,6 +68,7 @@ export type Database = {
           created_at: string;
           description: string;
           duration_minutes: number;
+          featured: boolean;
           id: string;
           title: string;
         };
@@ -75,6 +76,7 @@ export type Database = {
           created_at?: string;
           description?: string;
           duration_minutes?: number;
+          featured?: boolean;
           id?: string;
           title: string;
         };
@@ -82,6 +84,7 @@ export type Database = {
           created_at?: string;
           description?: string;
           duration_minutes?: number;
+          featured?: boolean;
           id?: string;
           title?: string;
         };

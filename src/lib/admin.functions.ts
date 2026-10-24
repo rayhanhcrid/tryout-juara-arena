@@ -48,6 +48,7 @@ export type AdminExam = {
   title: string;
   description: string;
   duration_minutes: number;
+  featured: boolean;
   questionCount: number;
   attemptCount: number;
 };
@@ -57,10 +58,14 @@ export const adminListExams = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     await assertAdmin(data.token);
     const admin = await adminClient();
+    // Same order participants see: pinned first, then oldest first.
     const { data: rows, error } = await admin
       .from("exams")
-      .select("id, title, description, duration_minutes, questions(count), attempts(count)")
-      .order("created_at", { ascending: false });
+      .select(
+        "id, title, description, duration_minutes, featured, questions(count), attempts(count)",
+      )
+      .order("featured", { ascending: false })
+      .order("created_at", { ascending: true });
     if (error) throw new Error("Gagal memuat daftar katalog.");
     const exams: AdminExam[] = (rows ?? []).map((r) => {
       const counted = r as { questions?: { count: number }[]; attempts?: { count: number }[] };
@@ -69,6 +74,7 @@ export const adminListExams = createServerFn({ method: "GET" })
         title: r.title,
         description: r.description,
         duration_minutes: r.duration_minutes,
+        featured: r.featured,
         questionCount: counted.questions?.[0]?.count ?? 0,
         attemptCount: counted.attempts?.[0]?.count ?? 0,
       };
@@ -76,11 +82,14 @@ export const adminListExams = createServerFn({ method: "GET" })
     return { exams };
   });
 
-function validateExamFields(input: {
+type ExamFields = {
   title: string;
   description: string;
   duration_minutes: number;
-}) {
+  featured: boolean;
+};
+
+function validateExamFields(input: ExamFields) {
   const title = input.title.trim();
   if (!title) throw new Error("Judul katalog tidak boleh kosong.");
   if (!Number.isFinite(input.duration_minutes) || input.duration_minutes <= 0) {
@@ -90,13 +99,12 @@ function validateExamFields(input: {
     title,
     description: input.description.trim(),
     duration_minutes: Math.round(input.duration_minutes),
+    featured: input.featured === true,
   };
 }
 
 export const adminCreateExam = createServerFn({ method: "POST" })
-  .inputValidator(
-    (input: AdminInput & { title: string; description: string; duration_minutes: number }) => input,
-  )
+  .inputValidator((input: AdminInput & ExamFields) => input)
   .handler(async ({ data }) => {
     await assertAdmin(data.token);
     const admin = await adminClient();
@@ -107,16 +115,7 @@ export const adminCreateExam = createServerFn({ method: "POST" })
   });
 
 export const adminUpdateExam = createServerFn({ method: "POST" })
-  .inputValidator(
-    (
-      input: AdminInput & {
-        examId: string;
-        title: string;
-        description: string;
-        duration_minutes: number;
-      },
-    ) => input,
-  )
+  .inputValidator((input: AdminInput & ExamFields & { examId: string }) => input)
   .handler(async ({ data }) => {
     await assertAdmin(data.token);
     const admin = await adminClient();

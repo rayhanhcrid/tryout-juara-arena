@@ -317,6 +317,7 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
                 title: selected.title,
                 description: selected.description,
                 duration_minutes: selected.duration_minutes,
+                featured: selected.featured,
               }
             : null
         }
