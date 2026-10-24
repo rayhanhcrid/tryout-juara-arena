@@ -385,13 +385,6 @@ html:has(.page-dark) body {
   background: linear-gradient(180deg, #d9d9de 0%, #a7a7ad 55%, #8e8e94 100%);
 }
 
-@utility app-icon {
-  background: linear-gradient(180deg, #2b9bff 0%, #0062d6 100%);
-  box-shadow:
-    inset 0 0 0 0.5px rgb(255 255 255 / 0.25),
-    0 1px 2px rgb(0 0 0 / 0.12);
-}
-
 @utility tabular {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;

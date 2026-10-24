@@ -230,7 +230,7 @@ Depth comes from soft long shadows on white surfaces over a gray ground, plus fr
 
 ## Shapes
 
-Continuous, generous rounding in Apple proportions: 14px base, 18px inputs, 22px option rows and grouped lists, 28px cards and bento tiles, 32–36px for the exam slab and result panel, full pills for buttons, chips and the timer. Avatars and answer letters are circles. The app icon is a 22.37% squircle. Borders are rare: inputs use a 1px gray stroke, and grouped lists separate rows with inset hairlines.
+Continuous, generous rounding in Apple proportions: 14px base, 18px inputs, 22px option rows and grouped lists, 28px cards and bento tiles, 32–36px for the exam slab and result panel, full pills for buttons, chips and the timer. Avatars and answer letters are circles. The app icon (public/brand/app-icon.webp; favicon.ico, favicon-32.png and apple-touch-icon.png cut from the same art) is an answer sheet with a ticked option, a mortarboard and a pencil on a teal-to-navy squircle; its corners are transparent in the image, so it is never re-masked or set on a tile. Borders are rare: inputs use a 1px gray stroke, and grouped lists separate rows with inset hairlines.
 
 ## Components
 

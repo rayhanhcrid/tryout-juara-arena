@@ -1,32 +1,22 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
-/** App icon: a stopwatch with a check, on the iOS icon squircle. */
+/**
+ * App icon: an answer sheet with a ticked option, a mortarboard and a pencil,
+ * on a teal squircle. Its rounded corners are part of the image (transparent).
+ */
 export function AppIcon({ size = 28, className }: { size?: number; className?: string }) {
   return (
-    <span
+    <img
+      src="/brand/app-icon.webp"
+      alt=""
       aria-hidden
-      className={cn(
-        "app-icon inline-flex shrink-0 items-center justify-center text-white",
-        className,
-      )}
-      style={{ width: size, height: size, borderRadius: size * 0.2237 }}
-    >
-      <svg
-        viewBox="0 0 24 24"
-        width={size * 0.64}
-        height={size * 0.64}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2.25}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M9.75 2.25h4.5M12 2.25v2.5" />
-        <circle cx="12" cy="13.5" r="7.75" />
-        <path d="m8.7 13.7 2.25 2.25 4.4-4.6" />
-      </svg>
-    </span>
+      width={size}
+      height={size}
+      decoding="async"
+      draggable={false}
+      className={cn("inline-block shrink-0 select-none", className)}
+    />
   );
 }
 
