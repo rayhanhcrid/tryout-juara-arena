@@ -134,38 +134,35 @@ export type Database = {
       };
       questions: {
         Row: {
-          correct_option: string;
+          answer: Json;
+          categories: Json | null;
           exam_id: string;
           id: string;
           image_path: string | null;
-          option_a: string;
-          option_b: string;
-          option_c: string;
-          option_d: string;
+          kind: string;
+          options: Json;
           order_index: number;
           text: string;
         };
         Insert: {
-          correct_option: string;
+          answer: Json;
+          categories?: Json | null;
           exam_id: string;
           id?: string;
           image_path?: string | null;
-          option_a: string;
-          option_b: string;
-          option_c: string;
-          option_d: string;
+          kind?: string;
+          options: Json;
           order_index?: number;
           text: string;
         };
         Update: {
-          correct_option?: string;
+          answer?: Json;
+          categories?: Json | null;
           exam_id?: string;
           id?: string;
           image_path?: string | null;
-          option_a?: string;
-          option_b?: string;
-          option_c?: string;
-          option_d?: string;
+          kind?: string;
+          options?: Json;
           order_index?: number;
           text?: string;
         };

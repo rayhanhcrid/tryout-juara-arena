@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { newGuestKey, reusableGuest, saveGuest, type Guest } from "@/lib/exam-session";
 import { isBundledImage } from "@/lib/question-format";
+import { isQuestionKind, type Answer, type QuestionKind } from "@/lib/question-kinds";
 
 /**
  * Everything a participant does, through database functions callable with
@@ -28,12 +29,12 @@ export type TakingExam = {
 
 export type TakingQuestion = {
   id: string;
+  kind: QuestionKind;
   text: string;
   imageUrl: string | null;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
+  /** Answer options, or the statements of a category question. */
+  options: string[];
+  categories: string[] | null;
 };
 
 export type LeaderboardEntry = {
@@ -72,7 +73,10 @@ export async function fetchCatalog(guest: GuestCred | null): Promise<CatalogEntr
 
 type ExamPayload = {
   exam: TakingExam;
-  questions: (Omit<TakingQuestion, "imageUrl"> & { image_path: string | null })[];
+  questions: (Omit<TakingQuestion, "imageUrl" | "kind"> & {
+    kind: string;
+    image_path: string | null;
+  })[];
 };
 
 /** An exam with its questions (no answer keys); images pre-signed for the whole sitting. */
@@ -98,13 +102,17 @@ export async function fetchExamForTaking(
 
   return {
     exam: payload.exam,
-    questions: payload.questions.map(({ image_path, ...q }) => ({
-      ...q,
-      imageUrl: !image_path
+    questions: payload.questions.map((q) => ({
+      id: q.id,
+      kind: isQuestionKind(q.kind) ? q.kind : "single",
+      text: q.text,
+      options: q.options,
+      categories: q.categories,
+      imageUrl: !q.image_path
         ? null
-        : isBundledImage(image_path)
-          ? image_path
-          : (urls.get(image_path) ?? null),
+        : isBundledImage(q.image_path)
+          ? q.image_path
+          : (urls.get(q.image_path) ?? null),
     })),
   };
 }
@@ -115,7 +123,7 @@ export async function fetchExamForTaking(
  */
 export async function submitAsGuest(
   examId: string,
-  answers: Record<string, string>,
+  answers: Record<string, Answer>,
   nama: string,
 ): Promise<{ score: number; total: number; nama: string }> {
   const reuse = reusableGuest(nama);

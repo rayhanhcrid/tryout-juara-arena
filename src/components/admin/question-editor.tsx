@@ -1,6 +1,6 @@
-import { Check, ImagePlus, RefreshCw, Trash2 } from "lucide-react";
+import { Check, ImagePlus, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { OPTION_KEYS, type OptionKey } from "@/components/exam/option-row";
+import { SegmentedControl } from "@/components/segmented-control";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,19 +11,28 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  CATEGORY_LIMITS,
+  CATEGORY_PRESETS,
+  LETTERS,
+  OPTION_LIMITS,
+  STATEMENT_LIMITS,
+  validateQuestion,
+  type AnswerKey,
+  type QuestionKind,
+  type ValidQuestion,
+} from "@/lib/question-kinds";
 import { cn } from "@/lib/utils";
 
 export type QuestionDraft = {
+  kind: QuestionKind;
   text: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  correct_option: OptionKey | "";
+  options: string[];
+  categories: string[] | null;
+  answer: AnswerKey;
 };
 
-export type QuestionSavePayload = Omit<QuestionDraft, "correct_option"> & {
-  correct_option: OptionKey;
+export type QuestionSavePayload = ValidQuestion & {
   imageBase64: string | null;
   imageName: string | null;
   removeImage: boolean;
@@ -31,6 +40,12 @@ export type QuestionSavePayload = Omit<QuestionDraft, "correct_option"> & {
 
 const ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const MAX_BYTES = 5 * 1024 * 1024;
+
+const KIND_OPTIONS = [
+  { value: "single", label: "Pilihan ganda" },
+  { value: "multiple", label: "PG kompleks" },
+  { value: "category", label: "Kategori" },
+] as const;
 
 function readAsBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -44,14 +59,72 @@ function readAsBase64(file: File): Promise<string> {
   });
 }
 
-const EMPTY: QuestionDraft = {
-  text: "",
-  option_a: "",
-  option_b: "",
-  option_c: "",
-  option_d: "",
-  correct_option: "",
+/**
+ * The editor keeps every form's parts side by side, so switching the form
+ * back and forth never throws away what was typed.
+ */
+type Work = {
+  kind: QuestionKind;
+  text: string;
+  choices: string[];
+  singleKey: string;
+  multiKeys: string[];
+  statements: string[];
+  categories: string[];
+  rowKeys: (number | null)[];
 };
+
+function workFrom(initial: QuestionDraft | null): Work {
+  const base: Work = {
+    kind: "single",
+    text: "",
+    choices: ["", "", "", ""],
+    singleKey: "",
+    multiKeys: [],
+    statements: ["", "", ""],
+    categories: [...(CATEGORY_PRESETS[0] ?? ["Benar", "Salah"])],
+    rowKeys: [null, null, null],
+  };
+  if (!initial) return base;
+  const keys = Array.isArray(initial.answer) ? initial.answer : [];
+  if (initial.kind === "category") {
+    return {
+      ...base,
+      kind: "category",
+      text: initial.text,
+      statements: initial.options,
+      categories: initial.categories ?? base.categories,
+      rowKeys: initial.options.map((_, i) => (typeof keys[i] === "number" ? keys[i] : null)),
+    };
+  }
+  return {
+    ...base,
+    kind: initial.kind,
+    text: initial.text,
+    choices: initial.options,
+    singleKey: typeof initial.answer === "string" ? initial.answer : "",
+    multiKeys: keys.filter((k): k is string => typeof k === "string"),
+  };
+}
+
+function toInput(work: Work) {
+  if (work.kind === "category") {
+    return {
+      kind: work.kind,
+      text: work.text,
+      options: work.statements,
+      categories: work.categories,
+      answer: work.rowKeys,
+    };
+  }
+  return {
+    kind: work.kind,
+    text: work.text,
+    options: work.choices,
+    categories: null,
+    answer: work.kind === "single" ? work.singleKey : work.multiKeys,
+  };
+}
 
 export function QuestionEditor({
   open,
@@ -71,20 +144,20 @@ export function QuestionEditor({
   initialImageUrl: string | null;
   onSave: (payload: QuestionSavePayload) => Promise<void>;
 }) {
-  const [draft, setDraft] = useState<QuestionDraft>(EMPTY);
+  const [work, setWork] = useState<Work>(() => workFrom(null));
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<
-    Partial<Record<"text" | "options" | "key" | "image" | "form", string>>
+    Partial<Record<"text" | "answers" | "image" | "form", string>>
   >({});
   const [dragging, setDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    setDraft(initial ?? EMPTY);
+    setWork(workFrom(initial));
     setFile(null);
     setPreview(null);
     setRemoveImage(false);
@@ -97,6 +170,8 @@ export function QuestionEditor({
     setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+
+  const set = (patch: Partial<Work>) => setWork((w) => ({ ...w, ...patch }));
 
   function acceptFile(f: File | undefined | null) {
     if (!f) return;
@@ -124,23 +199,19 @@ export function QuestionEditor({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const next: typeof errors = {};
-    if (!draft.text.trim()) next.text = "Tulis pertanyaannya dulu.";
-    if (OPTION_KEYS.some((k) => !draft[`option_${k}`].trim()))
-      next.options = "Keempat opsi jawaban wajib diisi.";
-    if (!draft.correct_option) next.key = "Pilih kunci jawaban dengan mengetuk salah satu huruf.";
-    setErrors(next);
-    if (Object.keys(next).length > 0) return;
-
+    let valid: ValidQuestion;
+    try {
+      valid = validateQuestion(toInput(work));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Periksa lagi isian soal.";
+      setErrors(work.text.trim() ? { answers: message } : { text: message });
+      return;
+    }
+    setErrors({});
     setSaving(true);
     try {
       await onSave({
-        text: draft.text,
-        option_a: draft.option_a,
-        option_b: draft.option_b,
-        option_c: draft.option_c,
-        option_d: draft.option_d,
-        correct_option: draft.correct_option as OptionKey,
+        ...valid,
         imageBase64: file ? await readAsBase64(file) : null,
         imageName: file ? file.name : null,
         removeImage: removeImage && !file,
@@ -178,13 +249,33 @@ export function QuestionEditor({
           className="flex-1 space-y-8 overflow-y-auto px-6 py-6"
         >
           <div className="space-y-2">
+            <p className="text-[13px] font-semibold text-muted-foreground">Bentuk soal</p>
+            <SegmentedControl
+              value={work.kind}
+              onChange={(kind) => {
+                set({ kind });
+                setErrors(({ answers: _cleared, ...rest }) => rest);
+              }}
+              options={KIND_OPTIONS}
+              ariaLabel="Bentuk soal"
+            />
+            <p className="text-[13px] text-muted-foreground">
+              {work.kind === "single"
+                ? "Satu jawaban benar, 2–6 opsi."
+                : work.kind === "multiple"
+                  ? "Jawaban benar lebih dari satu; peserta harus mencentang semuanya."
+                  : "Setiap pernyataan dijawab dengan satu kategori, misal Benar atau Salah."}
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <label htmlFor="q-text" className="text-[13px] font-semibold text-muted-foreground">
               Pertanyaan
             </label>
             <Textarea
               id="q-text"
-              value={draft.text}
-              onChange={(e) => setDraft({ ...draft, text: e.target.value })}
+              value={work.text}
+              onChange={(e) => set({ text: e.target.value })}
               placeholder="misal: Hasil dari 12 + 8 × 2 adalah …"
               rows={4}
               aria-invalid={!!errors.text}
@@ -273,49 +364,16 @@ export function QuestionEditor({
             ) : null}
           </div>
 
-          <fieldset className="space-y-3">
-            <legend className="text-[13px] font-semibold text-muted-foreground">
-              Pilihan jawaban
-            </legend>
-            <p className="-mt-1 text-[13px] text-muted-foreground">
-              Ketuk huruf untuk menjadikannya kunci jawaban.
+          {work.kind === "category" ? (
+            <CategoryFields work={work} set={set} />
+          ) : (
+            <ChoiceFields work={work} set={set} />
+          )}
+          {errors.answers ? (
+            <p role="alert" className="-mt-5 text-[13px] text-destructive-ink">
+              {errors.answers}
             </p>
-            <div role="radiogroup" aria-label="Kunci jawaban" className="space-y-2.5">
-              {OPTION_KEYS.map((k) => {
-                const isKey = draft.correct_option === k;
-                return (
-                  <div key={k} className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={isKey}
-                      aria-label={`Jadikan ${k.toUpperCase()} kunci jawaban`}
-                      onClick={() => setDraft({ ...draft, correct_option: k })}
-                      className={cn(
-                        "flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-[15px] font-semibold uppercase transition-[background-color,color,transform] duration-200 ease-apple active:scale-90",
-                        isKey
-                          ? "bg-success text-white"
-                          : "bg-fill text-muted-foreground hover:bg-secondary-hover hover:text-foreground",
-                      )}
-                    >
-                      {isKey ? <Check className="h-5 w-5" strokeWidth={3} /> : k}
-                    </button>
-                    <Input
-                      value={draft[`option_${k}`]}
-                      onChange={(e) => setDraft({ ...draft, [`option_${k}`]: e.target.value })}
-                      placeholder={`Opsi ${k.toUpperCase()}`}
-                      aria-label={`Opsi ${k.toUpperCase()}`}
-                      className={cn(isKey && "border-success/60")}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            {errors.options ? (
-              <p className="text-[13px] text-destructive-ink">{errors.options}</p>
-            ) : null}
-            {errors.key ? <p className="text-[13px] text-destructive-ink">{errors.key}</p> : null}
-          </fieldset>
+          ) : null}
         </form>
 
         <div className="border-t border-hairline bg-card px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
@@ -340,5 +398,274 @@ export function QuestionEditor({
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive-ink"
+    >
+      <X className="h-4 w-4" />
+    </button>
+  );
+}
+
+/** Options for pilihan ganda and kompleks; tapping a letter marks it as (a) key. */
+function ChoiceFields({ work, set }: { work: Work; set: (patch: Partial<Work>) => void }) {
+  const multiple = work.kind === "multiple";
+  const isKey = (l: string) => (multiple ? work.multiKeys.includes(l) : work.singleKey === l);
+
+  function toggleKey(letter: string) {
+    if (!multiple) return set({ singleKey: letter });
+    const next = work.multiKeys.includes(letter)
+      ? work.multiKeys.filter((k) => k !== letter)
+      : [...work.multiKeys, letter];
+    set({ multiKeys: LETTERS.filter((l) => next.includes(l)) });
+  }
+
+  function removeChoice(index: number) {
+    const letters = LETTERS.slice(0, work.choices.length);
+    // Keys after the removed option shift up one letter, with their text.
+    const shift = (l: string): string | null => {
+      const i = (letters as readonly string[]).indexOf(l);
+      if (i < 0 || i === index) return null;
+      return LETTERS[i > index ? i - 1 : i] ?? null;
+    };
+    set({
+      choices: work.choices.filter((_, i) => i !== index),
+      singleKey: shift(work.singleKey) ?? "",
+      multiKeys: work.multiKeys.map(shift).filter((l): l is string => l !== null),
+    });
+  }
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="text-[13px] font-semibold text-muted-foreground">Pilihan jawaban</legend>
+      <p className="-mt-1 text-[13px] text-muted-foreground">
+        {multiple
+          ? "Ketuk huruf untuk menandai setiap kunci jawaban (minimal dua)."
+          : "Ketuk huruf untuk menjadikannya kunci jawaban."}
+      </p>
+      <div
+        role={multiple ? "group" : "radiogroup"}
+        aria-label="Kunci jawaban"
+        className="space-y-2.5"
+      >
+        {work.choices.map((value, i) => {
+          const letter = LETTERS[i]!;
+          const key = isKey(letter);
+          return (
+            <div key={i} className="flex items-center gap-3">
+              <button
+                type="button"
+                role={multiple ? "checkbox" : "radio"}
+                aria-checked={key}
+                aria-label={`Jadikan ${letter.toUpperCase()} kunci jawaban`}
+                onClick={() => toggleKey(letter)}
+                className={cn(
+                  "flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center text-[15px] font-semibold uppercase transition-[background-color,color,transform] duration-200 ease-apple active:scale-90",
+                  multiple ? "rounded-[10px]" : "rounded-full",
+                  key
+                    ? "bg-success text-white"
+                    : "bg-fill text-muted-foreground hover:bg-secondary-hover hover:text-foreground",
+                )}
+              >
+                {key ? <Check className="h-5 w-5" strokeWidth={3} /> : letter}
+              </button>
+              <Input
+                value={value}
+                onChange={(e) =>
+                  set({ choices: work.choices.map((c, j) => (j === i ? e.target.value : c)) })
+                }
+                placeholder={`Opsi ${letter.toUpperCase()}`}
+                aria-label={`Opsi ${letter.toUpperCase()}`}
+                className={cn(key && "border-success/60")}
+              />
+              {work.choices.length > OPTION_LIMITS.min ? (
+                <RemoveButton
+                  label={`Hapus opsi ${letter.toUpperCase()}`}
+                  onClick={() => removeChoice(i)}
+                />
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+      {work.choices.length < OPTION_LIMITS.max ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => set({ choices: [...work.choices, ""] })}
+        >
+          <Plus /> Tambah opsi {LETTERS[work.choices.length]?.toUpperCase()}
+        </Button>
+      ) : null}
+    </fieldset>
+  );
+}
+
+/** Categories (with quick presets) and the statements, each with its key category. */
+function CategoryFields({ work, set }: { work: Work; set: (patch: Partial<Work>) => void }) {
+  const presetIndex = CATEGORY_PRESETS.findIndex(
+    (p) => p.length === work.categories.length && p.every((c, i) => c === work.categories[i]),
+  );
+
+  function setCategories(categories: string[]) {
+    // A key pointing past the end no longer has a category.
+    set({
+      categories,
+      rowKeys: work.rowKeys.map((k) => (k !== null && k < categories.length ? k : null)),
+    });
+  }
+
+  return (
+    <>
+      <fieldset className="space-y-3">
+        <legend className="text-[13px] font-semibold text-muted-foreground">
+          Kategori jawaban
+        </legend>
+        <div className="flex flex-wrap gap-1.5">
+          {CATEGORY_PRESETS.map((preset, i) => (
+            <button
+              key={preset.join("/")}
+              type="button"
+              aria-pressed={presetIndex === i}
+              onClick={() => setCategories([...preset])}
+              className={cn(
+                "h-8 cursor-pointer rounded-full px-3 text-[13px] font-medium transition-colors",
+                presetIndex === i
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-fill hover:bg-secondary-hover",
+              )}
+            >
+              {preset.join(" / ")}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {work.categories.map((value, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Input
+                value={value}
+                onChange={(e) =>
+                  setCategories(work.categories.map((c, j) => (j === i ? e.target.value : c)))
+                }
+                placeholder={`Kategori ${i + 1}`}
+                aria-label={`Kategori ${i + 1}`}
+              />
+              {work.categories.length > CATEGORY_LIMITS.min ? (
+                <RemoveButton
+                  label={`Hapus kategori ${i + 1}`}
+                  onClick={() => setCategories(work.categories.filter((_, j) => j !== i))}
+                />
+              ) : null}
+            </div>
+          ))}
+        </div>
+        {work.categories.length < CATEGORY_LIMITS.max ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setCategories([...work.categories, ""])}
+          >
+            <Plus /> Tambah kategori
+          </Button>
+        ) : null}
+      </fieldset>
+
+      <fieldset className="space-y-3">
+        <legend className="text-[13px] font-semibold text-muted-foreground">Pernyataan</legend>
+        <p className="-mt-1 text-[13px] text-muted-foreground">
+          Tulis setiap pernyataan, lalu pilih kategori yang benar sebagai kuncinya.
+        </p>
+        <ol className="space-y-4">
+          {work.statements.map((value, i) => (
+            <li key={i} className="space-y-2 rounded-2xl bg-fill/60 p-3">
+              <div className="flex items-start gap-3">
+                <span className="tabular mt-2.5 w-5 shrink-0 text-[14px] font-semibold text-muted-foreground">
+                  {i + 1}.
+                </span>
+                <Textarea
+                  value={value}
+                  onChange={(e) =>
+                    set({
+                      statements: work.statements.map((s, j) => (j === i ? e.target.value : s)),
+                    })
+                  }
+                  rows={2}
+                  placeholder={`Pernyataan ${i + 1}`}
+                  aria-label={`Pernyataan ${i + 1}`}
+                  className="min-h-0 bg-card"
+                />
+                {work.statements.length > STATEMENT_LIMITS.min ? (
+                  <RemoveButton
+                    label={`Hapus pernyataan ${i + 1}`}
+                    onClick={() =>
+                      set({
+                        statements: work.statements.filter((_, j) => j !== i),
+                        rowKeys: work.rowKeys.filter((_, j) => j !== i),
+                      })
+                    }
+                  />
+                ) : null}
+              </div>
+              <div
+                role="radiogroup"
+                aria-label={`Kunci pernyataan ${i + 1}`}
+                className="flex flex-wrap gap-1.5 pl-8"
+              >
+                {work.categories.map((category, c) => {
+                  const selected = work.rowKeys[i] === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() =>
+                        set({
+                          rowKeys: work.statements.map((_, j) =>
+                            j === i ? c : (work.rowKeys[j] ?? null),
+                          ),
+                        })
+                      }
+                      className={cn(
+                        "inline-flex h-8 cursor-pointer items-center gap-1 rounded-full px-3 text-[13px] font-medium transition-colors",
+                        selected
+                          ? "bg-success text-white"
+                          : "bg-card text-foreground hover:bg-secondary-hover",
+                      )}
+                    >
+                      {selected ? (
+                        <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />
+                      ) : null}
+                      {category || `Kategori ${c + 1}`}
+                    </button>
+                  );
+                })}
+              </div>
+            </li>
+          ))}
+        </ol>
+        {work.statements.length < STATEMENT_LIMITS.max ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              set({ statements: [...work.statements, ""], rowKeys: [...work.rowKeys, null] })
+            }
+          >
+            <Plus /> Tambah pernyataan
+          </Button>
+        ) : null}
+      </fieldset>
+    </>
   );
 }

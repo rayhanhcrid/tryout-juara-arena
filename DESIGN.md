@@ -267,7 +267,8 @@ CSS-drawn laptop, tablet and phone frames at fixed design sizes, scaled together
 Sideways cards with snap, a phone rising out of each card's bottom edge, a dot pager in a pill, and circular paddles.
 
 ### Exam Controls (signature)
-- **Option row:** white row, hairline stroke, a lettered circle; selected rows get a blue hairline, 6% blue fill, a filled blue letter and a trailing checkmark.
+- **Option row:** white row, hairline stroke, a lettered circle; selected rows get a blue hairline, 6% blue fill, a filled blue letter and a trailing checkmark. Pilihan ganda kompleks (more than one answer) swaps the circle for a rounded square that fills with a check, under a blue pill saying "Pilih semua jawaban yang benar"; up to six letters (A–F).
+- **Kategori rows:** one hairline-separated list of numbered statements, each with its own row of equal-width outlined pills (Benar / Salah, Sesuai / Tidak Sesuai, Fakta / Opini); the chosen pill fills blue with a check. Pills sit beside the statement on wide screens and under it on phones; a footnote counts rows still open, and the question only counts as answered when none are.
 - **Timer pill:** a draining 18px ring plus a tabular clock; gray at rest, orange under five minutes, red with a pulsing dot in the last minute. On start, the intro's full 236px ring turns into this pill through a view transition.
 - **Navigator grid:** rounded squares; blue for answered, orange for ragu-ragu, translucent for empty, with an ink ring on the current question.
 - **Score ring:** an activity-ring arc in green, blue or orange by score band, drawn while the number counts up.

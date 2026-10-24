@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ActivityIndicator } from "@/components/activity-indicator";
 import { AdminGate } from "@/components/admin/admin-gate";
@@ -11,7 +11,6 @@ import {
   type QuestionDraft,
   type QuestionSavePayload,
 } from "@/components/admin/question-editor";
-import type { OptionKey } from "@/components/exam/option-row";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -243,16 +242,20 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
   }
 
   const editingQuestion = editor.index !== null ? questions[editor.index] : undefined;
-  const editorInitial: QuestionDraft | null = editingQuestion
-    ? {
-        text: editingQuestion.text,
-        option_a: editingQuestion.option_a,
-        option_b: editingQuestion.option_b,
-        option_c: editingQuestion.option_c,
-        option_d: editingQuestion.option_d,
-        correct_option: editingQuestion.correct_option as OptionKey,
-      }
-    : null;
+  // Memoised: the editor resets its form whenever `initial` changes identity.
+  const editorInitial = useMemo<QuestionDraft | null>(
+    () =>
+      editingQuestion
+        ? {
+            kind: editingQuestion.kind,
+            text: editingQuestion.text,
+            options: editingQuestion.options,
+            categories: editingQuestion.categories,
+            answer: editingQuestion.answer,
+          }
+        : null,
+    [editingQuestion],
+  );
 
   const actions: WorkspaceActions = {
     onSelect: setSelectedId,

@@ -20,11 +20,11 @@ import {
 import { useMemo, useState } from "react";
 import { BrandLink } from "@/components/brand";
 import { CatalogCover, CoverMark, catalogCoverClass } from "@/components/catalog-cover";
-import { OPTION_KEYS } from "@/components/exam/option-row";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDuration } from "@/lib/format";
 import { splitQuestionText } from "@/lib/question-format";
+import { LETTERS, kindLabel, type AnswerKey, type QuestionKind } from "@/lib/question-kinds";
 import { cn } from "@/lib/utils";
 
 export type WorkspaceExam = {
@@ -41,11 +41,10 @@ export type WorkspaceQuestion = {
   id: string;
   text: string;
   imageUrl: string | null;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  correct_option: string;
+  kind: QuestionKind;
+  options: string[];
+  categories: string[] | null;
+  answer: AnswerKey;
 };
 
 export type WorkspaceActions = {
@@ -440,6 +439,62 @@ function IconAction({
   );
 }
 
+/** Options with the key marked, or for a kategori each statement with its key category. */
+function QuestionKeyPreview({ question }: { question: WorkspaceQuestion }) {
+  if (question.kind === "category") {
+    const key = Array.isArray(question.answer) ? (question.answer as number[]) : [];
+    return (
+      <ol className="mt-2 grid gap-1.5">
+        {question.options.map((statement, i) => (
+          <li
+            key={i}
+            className="flex items-start justify-between gap-3 rounded-xl bg-background px-3 py-2 text-[14px]"
+          >
+            <span className="flex min-w-0 gap-2">
+              <span className="tabular text-muted-foreground">{i + 1}.</span>
+              <span className="break-words">{statement}</span>
+            </span>
+            <span className="shrink-0 rounded-full bg-success/12 px-2.5 py-0.5 text-[12px] font-semibold text-success-ink">
+              <span className="sr-only">Kunci: </span>
+              {question.categories?.[key[i] ?? -1] ?? "?"}
+            </span>
+          </li>
+        ))}
+      </ol>
+    );
+  }
+  const keys: unknown[] = Array.isArray(question.answer) ? question.answer : [question.answer];
+  return (
+    <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
+      {question.options.map((label, i) => {
+        const letter = LETTERS[i]!;
+        const correct = keys.includes(letter);
+        return (
+          <li
+            key={letter}
+            className={cn(
+              "flex items-center gap-2.5 rounded-xl px-3 py-2 text-[14px]",
+              correct ? "bg-success/12 font-medium text-success-ink" : "bg-background",
+            )}
+          >
+            <span
+              className={cn(
+                "flex h-6 w-6 shrink-0 items-center justify-center text-[12px] font-semibold uppercase",
+                question.kind === "multiple" ? "rounded-[6px]" : "rounded-full",
+                correct ? "bg-success text-white" : "bg-fill text-muted-foreground",
+              )}
+            >
+              {correct ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : letter}
+            </span>
+            <span className="min-w-0 break-words">{label}</span>
+            {correct ? <span className="sr-only">(kunci jawaban)</span> : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /** The question in full; a reading passage before it is shortened to two lines. */
 function QuestionPreview({ text }: { text: string }) {
   const { stimulus, stem } = splitQuestionText(text);
@@ -489,31 +544,13 @@ function QuestionCard({
               className="mt-3 max-h-44 rounded-xl bg-fill object-contain"
             />
           ) : null}
-          <ul className="mt-4 grid gap-1.5 sm:grid-cols-2">
-            {OPTION_KEYS.map((k) => {
-              const correct = question.correct_option === k;
-              return (
-                <li
-                  key={k}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-xl px-3 py-2 text-[14px]",
-                    correct ? "bg-success/12 font-medium text-success-ink" : "bg-background",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold uppercase",
-                      correct ? "bg-success text-white" : "bg-fill text-muted-foreground",
-                    )}
-                  >
-                    {correct ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : k}
-                  </span>
-                  <span className="min-w-0 break-words">{question[`option_${k}`]}</span>
-                  {correct ? <span className="sr-only">(kunci jawaban)</span> : null}
-                </li>
-              );
-            })}
-          </ul>
+          <p className="mt-3 text-[12px] font-medium text-muted-foreground">
+            {kindLabel(question.kind)}
+            {question.kind === "category" && question.categories
+              ? ` · ${question.categories.join(" / ")}`
+              : ""}
+          </p>
+          <QuestionKeyPreview question={question} />
         </div>
         <div className="-mr-1 flex shrink-0 flex-col gap-0.5">
           <IconAction

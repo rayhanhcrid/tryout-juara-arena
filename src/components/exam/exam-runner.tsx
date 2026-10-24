@@ -6,6 +6,7 @@ import {
   FileText,
   Flag,
   LayoutGrid,
+  ListChecks,
   RotateCw,
   Send,
   Timer,
@@ -19,7 +20,8 @@ import { ActivityIndicator } from "@/components/activity-indicator";
 import { CoverPhotoImage, catalogCoverClass, coverPhotoOf } from "@/components/catalog-cover";
 import { FieldGroup, FloatingField } from "@/components/form-fields";
 import { NavigatorGrid, NavigatorLegend, type CellState } from "@/components/exam/navigator-grid";
-import { OPTION_KEYS, OptionRow, type OptionKey } from "@/components/exam/option-row";
+import { CategoryRows } from "@/components/exam/category-rows";
+import { OptionRow } from "@/components/exam/option-row";
 import { TimerPill } from "@/components/exam/timer-pill";
 import {
   AlertDialog,
@@ -44,6 +46,17 @@ import {
 } from "@/lib/exam-session";
 import { formatClock, formatDuration } from "@/lib/format";
 import { isLongStem, splitQuestionText } from "@/lib/question-format";
+import {
+  LETTERS,
+  QUESTION_KINDS,
+  answerInstruction,
+  cleanAnswer,
+  isComplete,
+  kindLabel,
+  missingRows,
+  type Answer,
+  type QuestionShape,
+} from "@/lib/question-kinds";
 import { cn } from "@/lib/utils";
 
 export type RunnerExam = {
@@ -53,15 +66,25 @@ export type RunnerExam = {
   duration_minutes: number;
 };
 
-export type RunnerQuestion = {
+export type RunnerQuestion = QuestionShape & {
   id: string;
   text: string;
   imageUrl: string | null;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
 };
+
+type Answers = Record<string, Answer>;
+
+/** Answers saved by this browser, kept only where they still fit their question. */
+function restoreAnswers(raw: unknown, questions: RunnerQuestion[]): Answers {
+  if (!raw || typeof raw !== "object") return {};
+  const saved = raw as Record<string, unknown>;
+  const out: Answers = {};
+  for (const q of questions) {
+    const clean = cleanAnswer(q, saved[q.id]);
+    if (clean !== null) out[q.id] = clean;
+  }
+  return out;
+}
 
 type Phase = "loading" | "intro" | "running" | "submitting" | "failed";
 
@@ -90,14 +113,14 @@ export function ExamRunner({
   /** Name last used on this browser, offered in the intro. */
   defaultName: string;
   /** Sends the answers under the participant's name; throws on failure. */
-  onSubmit: (answers: Record<string, string>, nama: string) => Promise<void>;
+  onSubmit: (answers: Answers, nama: string) => Promise<void>;
   onExit: () => void;
 }) {
   const keys = sessionKeys(ownerId, exam.id);
   const totalMs = exam.duration_minutes * 60_000;
 
   const [phase, setPhase] = useState<Phase>("loading");
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Answers>({});
   const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [current, setCurrent] = useState(0);
   const [dir, setDir] = useState<"next" | "prev">("next");
@@ -143,7 +166,7 @@ export function ExamRunner({
       setPhase("intro");
       return;
     }
-    const restored = storageGetJSON<Record<string, string>>(keys.answers) ?? {};
+    const restored = restoreAnswers(storageGetJSON<unknown>(keys.answers), questions);
     setAnswers(restored);
     const savedName = storageGet(keys.name) || defaultName || "Peserta";
     setNama(savedName);
@@ -162,7 +185,7 @@ export function ExamRunner({
             : `Timer tetap berjalan · sisa ${formatClock(state.deadline - Date.now())}`,
       });
     } else if (state.hasAnswers) {
-      answersRef.current = storageGetJSON<Record<string, string>>(keys.answers) ?? {};
+      answersRef.current = restored;
       void submit("expired");
     } else {
       clearSession(keys);
@@ -214,17 +237,55 @@ export function ExamRunner({
 
   const q = questions[current];
 
-  const pick = useCallback(
-    (letter: OptionKey) => {
+  /** Change the current question's answer; null clears it. Saved as it changes. */
+  const update = useCallback(
+    (change: (prev: Answer | undefined) => Answer | null) => {
       if (!q) return;
       setAnswers((prev) => {
-        const next = { ...prev, [q.id]: letter };
+        const value = change(prev[q.id]);
+        const next = { ...prev };
+        if (value === null) delete next[q.id];
+        else next[q.id] = value;
         storageSet(keys.answers, JSON.stringify(next));
         return next;
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [q?.id],
+  );
+
+  /** Option letter tapped or typed: choose it, or for kompleks toggle it. */
+  const pick = useCallback(
+    (letter: string) => {
+      if (!q || q.kind === "category") return;
+      if (!LETTERS.slice(0, q.options.length).includes(letter as (typeof LETTERS)[number])) return;
+      if (q.kind === "single") {
+        update(() => letter);
+        return;
+      }
+      update((prev) => {
+        const set = new Set(Array.isArray(prev) ? (prev as string[]) : []);
+        if (set.has(letter)) set.delete(letter);
+        else set.add(letter);
+        const sorted = LETTERS.filter((l) => set.has(l));
+        return sorted.length > 0 ? sorted : null;
+      });
+    },
+    [q, update],
+  );
+
+  const setCategory = useCallback(
+    (row: number, category: number) => {
+      if (!q || q.kind !== "category") return;
+      update((prev) => {
+        const rows: (number | null)[] = Array.isArray(prev)
+          ? (prev as (number | null)[]).slice()
+          : q.options.map(() => null);
+        rows[row] = category;
+        return rows;
+      });
+    },
+    [q, update],
   );
 
   const toggleFlag = useCallback(() => {
@@ -237,7 +298,7 @@ export function ExamRunner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q?.id]);
 
-  // Keyboard: A–D or 1–4 choose, arrows move, R flags.
+  // Keyboard: letters or digits choose (toggle, for kompleks), arrows move, R flags.
   useEffect(() => {
     if (phase !== "running" || confirmSubmit || confirmExit || navOpen) return;
     function onKey(e: KeyboardEvent) {
@@ -249,9 +310,10 @@ export function ExamRunner({
       )
         return;
       const k = e.key.toLowerCase();
-      const byNumber = { "1": "a", "2": "b", "3": "c", "4": "d" } as const;
-      if (k === "a" || k === "b" || k === "c" || k === "d") pick(k);
-      else if (k in byNumber) pick(byNumber[k as keyof typeof byNumber]);
+      const index = /^[1-6]$/.test(k) ? Number(k) - 1 : (LETTERS as readonly string[]).indexOf(k);
+      const letter =
+        q && q.kind !== "category" && index < q.options.length ? LETTERS[index] : undefined;
+      if (letter) pick(letter);
       else if (e.key === "ArrowRight") go(current + 1);
       else if (e.key === "ArrowLeft") go(current - 1);
       else if (k === "r") toggleFlag();
@@ -260,13 +322,15 @@ export function ExamRunner({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, confirmSubmit, confirmExit, navOpen, pick, go, toggleFlag, current]);
+  }, [phase, confirmSubmit, confirmExit, navOpen, pick, go, toggleFlag, current, q]);
 
-  const answeredCount = questions.filter((item) => answers[item.id]).length;
+  // Only a fully answered question counts; a kategori with a row left open does not.
+  const done = (item: RunnerQuestion) => isComplete(item, answers[item.id]);
+  const answeredCount = questions.filter(done).length;
   const flaggedCount = questions.filter((item) => flags[item.id]).length;
   const unanswered = questions.length - answeredCount;
   const states: CellState[] = questions.map((item) =>
-    flags[item.id] ? "flagged" : answers[item.id] ? "answered" : "empty",
+    flags[item.id] ? "flagged" : done(item) ? "answered" : "empty",
   );
 
   if (phase === "loading") {
@@ -281,7 +345,7 @@ export function ExamRunner({
     return (
       <ExamIntro
         exam={exam}
-        count={questions.length}
+        questions={questions}
         defaultName={nama}
         onStart={start}
         onBack={onExit}
@@ -369,18 +433,12 @@ export function ExamRunner({
             className={dir === "next" ? "animate-slide-next" : "animate-slide-prev"}
           >
             <QuestionBody text={q.text} imageUrl={q.imageUrl} />
-
-            <div className="mt-8 grid gap-3" role="group" aria-label="Pilihan jawaban">
-              {OPTION_KEYS.map((key) => (
-                <OptionRow
-                  key={key}
-                  letter={key}
-                  label={q[`option_${key}` as const]}
-                  selected={answers[q.id] === key}
-                  onSelect={() => pick(key)}
-                />
-              ))}
-            </div>
+            <AnswerArea
+              question={q}
+              answer={answers[q.id]}
+              onPick={pick}
+              onCategory={setCategory}
+            />
           </div>
 
           <div className="mt-10 hidden items-center justify-between gap-3 lg:flex">
@@ -406,7 +464,13 @@ export function ExamRunner({
             )}
           </div>
           <p className="mt-8 hidden type-footnote text-muted-foreground lg:block">
-            Pintasan: <Kbd>A</Kbd>–<Kbd>D</Kbd> pilih jawaban ·{" "}
+            Pintasan:{" "}
+            {q.kind === "category" ? null : (
+              <>
+                <Kbd>A</Kbd>–<Kbd>{LETTERS[q.options.length - 1]?.toUpperCase()}</Kbd>{" "}
+                {q.kind === "multiple" ? "centang jawaban" : "pilih jawaban"} ·{" "}
+              </>
+            )}
             <Kbd>
               <ArrowLeft aria-label="panah kiri" className="h-3 w-3" strokeWidth={2.5} />
             </Kbd>{" "}
@@ -579,15 +643,28 @@ function ToolbarButton({
   );
 }
 
+/** "30 soal pilihan ganda", or for a mixed paper each form with its count. */
+function paperSummary(questions: RunnerQuestion[]): string[] {
+  const counts = new Map<QuestionShape["kind"], number>();
+  for (const q of questions) counts.set(q.kind, (counts.get(q.kind) ?? 0) + 1);
+  if (counts.size <= 1) {
+    const kind = questions[0]?.kind ?? "single";
+    return [`${questions.length} soal ${kindLabel(kind).toLowerCase()}`];
+  }
+  return QUESTION_KINDS.filter((k) => counts.has(k)).map(
+    (k) => `${counts.get(k)} ${kindLabel(k).toLowerCase()}`,
+  );
+}
+
 function ExamIntro({
   exam,
-  count,
+  questions,
   defaultName,
   onStart,
   onBack,
 }: {
   exam: RunnerExam;
-  count: number;
+  questions: RunnerQuestion[];
   defaultName: string;
   onStart: (name: string) => void;
   onBack: () => void;
@@ -641,7 +718,11 @@ function ExamIntro({
       <div className="mx-auto grid w-full max-w-6xl flex-1 content-end gap-10 px-5 pb-10 pt-[16vh] sm:px-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:content-center lg:items-center lg:gap-16 lg:pb-16 lg:pt-8">
         <div className="animate-rise">
           <div className="flex flex-wrap gap-2">
-            <IntroChip icon={FileText}>{count} soal pilihan ganda</IntroChip>
+            {paperSummary(questions).map((part, i) => (
+              <IntroChip key={part} icon={i === 0 ? FileText : null}>
+                {part}
+              </IntroChip>
+            ))}
             <IntroChip icon={Timer}>{formatDuration(exam.duration_minutes)}</IntroChip>
           </div>
           <h1 className="mt-5 font-display text-[clamp(2.5rem,1.5rem+3.8vw,4.75rem)] font-bold leading-[1.02] tracking-[-0.036em] text-white">
@@ -732,10 +813,16 @@ function ExamIntro({
   );
 }
 
-function IntroChip({ icon: Icon, children }: { icon: typeof Timer; children: React.ReactNode }) {
+function IntroChip({
+  icon: Icon,
+  children,
+}: {
+  icon: typeof Timer | null;
+  children: React.ReactNode;
+}) {
   return (
     <span className="tabular inline-flex items-center gap-1.5 rounded-full bg-white/14 px-3 py-1.5 text-[13px] font-medium text-white backdrop-blur-md">
-      <Icon aria-hidden className="h-3.5 w-3.5" />
+      {Icon ? <Icon aria-hidden className="h-3.5 w-3.5" /> : null}
       {children}
     </span>
   );
@@ -770,6 +857,81 @@ function SubjectThumb({ exam }: { exam: RunnerExam }) {
     >
       {photo ? <CoverPhotoImage photo={photo} eager /> : null}
     </span>
+  );
+}
+
+/**
+ * The answer controls for one question. Kompleks says up front that more
+ * than one answer is right, since its rows look like single choice; a
+ * kategori says how many rows are still open.
+ */
+function AnswerArea({
+  question,
+  answer,
+  onPick,
+  onCategory,
+}: {
+  question: RunnerQuestion;
+  answer: Answer | undefined;
+  onPick: (letter: string) => void;
+  onCategory: (row: number, category: number) => void;
+}) {
+  const hintId = `answer-hint-${question.id}`;
+
+  if (question.kind === "category") {
+    const open = missingRows(question, answer);
+    const rows = Array.isArray(answer) ? (answer as (number | null)[]) : [];
+    return (
+      <div className="mt-8">
+        <CategoryRows
+          statements={question.options}
+          categories={question.categories ?? []}
+          value={question.options.map((_, i) => rows[i] ?? null)}
+          onChange={onCategory}
+        />
+        <p className="mt-3 type-footnote text-muted-foreground" aria-live="polite">
+          {open === 0
+            ? "Semua pernyataan sudah dijawab."
+            : `${open} dari ${question.options.length} pernyataan belum dijawab.`}
+        </p>
+      </div>
+    );
+  }
+
+  const multiple = question.kind === "multiple";
+  const picked = multiple ? (Array.isArray(answer) ? (answer as string[]) : []) : [answer];
+  return (
+    <div className="mt-8">
+      {multiple ? (
+        <p
+          id={hintId}
+          className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-[14px] font-medium text-primary"
+        >
+          <ListChecks aria-hidden className="h-4 w-4" />
+          {answerInstruction(question)}
+        </p>
+      ) : null}
+      <div
+        className="grid gap-3"
+        role={multiple ? "group" : "radiogroup"}
+        aria-label="Pilihan jawaban"
+        aria-describedby={multiple ? hintId : undefined}
+      >
+        {question.options.map((label, i) => {
+          const letter = LETTERS[i]!;
+          return (
+            <OptionRow
+              key={letter}
+              letter={letter}
+              label={label}
+              mode={multiple ? "multiple" : "single"}
+              selected={picked.includes(letter)}
+              onSelect={() => onPick(letter)}
+            />
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

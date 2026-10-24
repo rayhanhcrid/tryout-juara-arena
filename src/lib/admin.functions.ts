@@ -1,5 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { isBundledImage } from "@/lib/question-format";
+import {
+  isQuestionKind,
+  validateQuestion,
+  type AnswerKey,
+  type QuestionKind,
+} from "@/lib/question-kinds";
 
 /**
  * Admin server functions. Every call re-verifies the admin token
@@ -149,11 +155,10 @@ export type AdminQuestion = {
   text: string;
   image_path: string | null;
   imageUrl: string | null;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  correct_option: string;
+  kind: QuestionKind;
+  options: string[];
+  categories: string[] | null;
+  answer: AnswerKey;
 };
 
 export const adminGetQuestions = createServerFn({ method: "GET" })
@@ -185,11 +190,10 @@ export const adminGetQuestions = createServerFn({ method: "GET" })
         text: q.text,
         image_path: q.image_path,
         imageUrl,
-        option_a: q.option_a,
-        option_b: q.option_b,
-        option_c: q.option_c,
-        option_d: q.option_d,
-        correct_option: q.correct_option,
+        kind: isQuestionKind(q.kind) ? q.kind : "single",
+        options: q.options as string[],
+        categories: (q.categories as string[] | null) ?? null,
+        answer: q.answer as AnswerKey,
       });
     }
     return { questions };
@@ -243,29 +247,22 @@ async function removeImages(admin: AdminClient, paths: string[]) {
 }
 
 type QuestionFields = {
+  kind: QuestionKind;
   text: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  correct_option: string;
+  options: string[];
+  categories: string[] | null;
+  answer: AnswerKey;
 };
 
-function validateQuestionFields(data: QuestionFields): QuestionFields {
-  if (!data.text.trim()) throw new Error("Teks soal tidak boleh kosong.");
-  const options = [data.option_a, data.option_b, data.option_c, data.option_d];
-  if (options.some((o) => !o.trim())) throw new Error("Semua opsi jawaban harus diisi.");
-  if (!["a", "b", "c", "d"].includes(data.correct_option)) {
-    throw new Error("Pilih kunci jawaban (A/B/C/D).");
-  }
-  return {
-    text: data.text.trim(),
-    option_a: data.option_a.trim(),
-    option_b: data.option_b.trim(),
-    option_c: data.option_c.trim(),
-    option_d: data.option_d.trim(),
-    correct_option: data.correct_option,
-  };
+/** The same rules the editor applies; the database's shape check backs both up. */
+function validateQuestionFields(data: QuestionFields) {
+  return validateQuestion({
+    kind: data.kind,
+    text: data.text,
+    options: Array.isArray(data.options) ? data.options.map(String) : [],
+    categories: Array.isArray(data.categories) ? data.categories.map(String) : null,
+    answer: data.answer,
+  });
 }
 
 export const adminCreateQuestion = createServerFn({ method: "POST" })
@@ -443,12 +440,10 @@ export const adminSeedSmaCatalogs = createServerFn({ method: "POST" })
         cat.questions.map((q, i) => ({
           exam_id: exam.id,
           order_index: i + 1,
+          kind: "single",
           text: q.text,
-          option_a: q.options[0],
-          option_b: q.options[1],
-          option_c: q.options[2],
-          option_d: q.options[3],
-          correct_option: q.key,
+          options: q.options,
+          answer: q.key,
         })),
       );
       if (qError) {

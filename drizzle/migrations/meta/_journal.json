@@ -29,6 +29,20 @@
       "when": 1792820617419,
       "tag": "0003_featured_catalogs",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792823272802,
+      "tag": "0004_question_kinds",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792823272875,
+      "tag": "0005_tka_geografi_forms",
+      "breakpoints": true
     }
   ]
 }

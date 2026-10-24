@@ -7,6 +7,7 @@ import { ExamRunner } from "@/components/exam/exam-runner";
 import { Button } from "@/components/ui/button";
 import { deviceId, readGuest } from "@/lib/exam-session";
 import { fetchExamForTaking, submitAsGuest } from "@/lib/participant-api";
+import type { Answer } from "@/lib/question-kinds";
 
 export const Route = createFileRoute("/ujian/$examId")({
   ssr: false,
@@ -34,7 +35,7 @@ function UjianPage() {
   });
 
   const onSubmit = useCallback(
-    async (answers: Record<string, string>, nama: string) => {
+    async (answers: Record<string, Answer>, nama: string) => {
       await submitAsGuest(examId, answers, nama);
       await queryClient.invalidateQueries({ queryKey: ["catalog"] });
       await queryClient.invalidateQueries({ queryKey: ["hasil", examId] });

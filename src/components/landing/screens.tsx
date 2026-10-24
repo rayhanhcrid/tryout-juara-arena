@@ -1,7 +1,7 @@
 import { Search } from "lucide-react";
 import { CatalogCover } from "@/components/catalog-cover";
 import { NavigatorGrid, type CellState } from "@/components/exam/navigator-grid";
-import { OPTION_KEYS, OptionRow } from "@/components/exam/option-row";
+import { OptionRow } from "@/components/exam/option-row";
 import { TimerPill } from "@/components/exam/timer-pill";
 import { InitialsAvatar } from "@/components/initials-avatar";
 import { ScoreRing } from "@/components/score-ring";
@@ -139,7 +139,7 @@ export function ExamScreen({ topInset = 0 }: { topInset?: number }) {
           Benda bermassa 5 kg diberi gaya 20 N. Percepatannya adalah …
         </p>
         <div className="mt-3 space-y-1.5">
-          {OPTION_KEYS.map((k, i) => (
+          {["a", "b", "c", "d"].map((k, i) => (
             <OptionRow
               key={k}
               letter={k}

@@ -2,11 +2,14 @@ import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Flag, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NavigatorGrid, NavigatorLegend, type CellState } from "@/components/exam/navigator-grid";
-import { OPTION_KEYS, OptionRow, type OptionKey } from "@/components/exam/option-row";
+import { OptionRow } from "@/components/exam/option-row";
 import { TimerPill, type TimerTone } from "@/components/exam/timer-pill";
 import { ScoreRing } from "@/components/score-ring";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const OPTION_KEYS = ["a", "b", "c", "d"] as const;
+type OptionKey = (typeof OPTION_KEYS)[number];
 
 /** The five questions of the seeded "Try Out Matematika Dasar" catalog. */
 const QUESTIONS: { text: string; options: Record<OptionKey, string>; key: OptionKey }[] = [
