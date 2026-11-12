@@ -23,7 +23,7 @@ export function AppIcon({ size = 28, className }: { size?: number; className?: s
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn("font-display text-[19px] font-semibold tracking-[-0.03em]", className)}>
-      TryOutKu
+      lulustes
     </span>
   );
 }
@@ -33,7 +33,7 @@ export function BrandLink({
   iconSize = 26,
   className,
 }: {
-  to?: "/" | "/dashboard" | "/admin";
+  to?: "/" | "/hari-ini" | "/admin";
   iconSize?: number;
   className?: string;
 }) {
@@ -41,7 +41,7 @@ export function BrandLink({
     <Link
       to={to}
       className={cn("flex items-center gap-2 rounded-lg text-foreground", className)}
-      aria-label="TryOutKu"
+      aria-label="lulustes"
     >
       <AppIcon size={iconSize} />
       <Wordmark />

@@ -66,27 +66,33 @@ export type Database = {
       exams: {
         Row: {
           created_at: string;
+          daily_date: string | null;
           description: string;
           duration_minutes: number;
           featured: boolean;
           id: string;
           title: string;
+          track: string;
         };
         Insert: {
           created_at?: string;
+          daily_date?: string | null;
           description?: string;
           duration_minutes?: number;
           featured?: boolean;
           id?: string;
           title: string;
+          track?: string;
         };
         Update: {
           created_at?: string;
+          daily_date?: string | null;
           description?: string;
           duration_minutes?: number;
           featured?: boolean;
           id?: string;
           title?: string;
+          track?: string;
         };
         Relationships: [];
       };
@@ -108,6 +114,39 @@ export type Database = {
           id?: string;
           key_hash?: string;
           nama?: string;
+        };
+        Relationships: [];
+      };
+      news: {
+        Row: {
+          created_at: string;
+          id: string;
+          published_on: string;
+          source_name: string;
+          source_url: string;
+          summary: string;
+          title: string;
+          track: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          published_on?: string;
+          source_name?: string;
+          source_url: string;
+          summary?: string;
+          title: string;
+          track?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          published_on?: string;
+          source_name?: string;
+          source_url?: string;
+          summary?: string;
+          title?: string;
+          track?: string;
         };
         Relationships: [];
       };
@@ -137,33 +176,39 @@ export type Database = {
           answer: Json;
           categories: Json | null;
           exam_id: string;
+          explanation: string;
           id: string;
           image_path: string | null;
           kind: string;
           options: Json;
           order_index: number;
+          section: string | null;
           text: string;
         };
         Insert: {
           answer: Json;
           categories?: Json | null;
           exam_id: string;
+          explanation?: string;
           id?: string;
           image_path?: string | null;
           kind?: string;
           options: Json;
           order_index?: number;
+          section?: string | null;
           text: string;
         };
         Update: {
           answer?: Json;
           categories?: Json | null;
           exam_id?: string;
+          explanation?: string;
           id?: string;
           image_path?: string | null;
           kind?: string;
           options?: Json;
           order_index?: number;
+          section?: string | null;
           text?: string;
         };
         Relationships: [
@@ -181,10 +226,15 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      get_attempt_review: {
+        Args: { p_attempt_id: string; p_guest_id: string; p_guest_key: string };
+        Returns: Json;
+      };
       get_catalog: {
         Args: { p_guest_id?: string; p_guest_key?: string };
         Returns: {
           attempt_count: number;
+          daily_date: string | null;
           description: string;
           duration_minutes: number;
           id: string;
@@ -192,7 +242,12 @@ export type Database = {
           my_best_total: number | null;
           question_count: number;
           title: string;
+          track: string;
         }[];
+      };
+      get_daily: {
+        Args: { p_guest_id?: string; p_guest_key?: string };
+        Returns: Json;
       };
       get_exam_for_taking: {
         Args: { p_exam_id: string };
@@ -207,6 +262,18 @@ export type Database = {
           score: number;
           submitted_at: string;
           total: number;
+        }[];
+      };
+      get_news: {
+        Args: { p_limit?: number };
+        Returns: {
+          id: string;
+          published_on: string;
+          source_name: string;
+          source_url: string;
+          summary: string;
+          title: string;
+          track: string;
         }[];
       };
       get_my_attempts: {

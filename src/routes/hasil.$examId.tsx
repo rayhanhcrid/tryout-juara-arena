@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { FileQuestion } from "lucide-react";
 import { useState } from "react";
 import { AppShell, useGuestName } from "@/components/app-shell";
-import { ResultView } from "@/components/result/result-view";
+import { ResultView, type ResultBack } from "@/components/result/result-view";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { readGuest } from "@/lib/exam-session";
-import { fetchResults } from "@/lib/participant-api";
+import { fetchDaily, fetchResults } from "@/lib/participant-api";
 
 type HasilSearch = { baru?: boolean };
 
@@ -17,8 +17,8 @@ export const Route = createFileRoute("/hasil/$examId")({
     search["baru"] === true || search["baru"] === "true" ? { baru: true } : {},
   head: () => ({
     meta: [
-      { title: "Hasil & Peringkat — TryOutKu" },
-      { name: "description", content: "Skor try out dan papan peringkatnya." },
+      { title: "Hasil & Peringkat — lulustes" },
+      { name: "description", content: "Skor paket soal dan papan peringkatnya." },
       { name: "theme-color", content: "#000000" },
     ],
   }),
@@ -37,6 +37,17 @@ function HasilPage() {
     queryFn: () => fetchResults(examId, guest),
   });
 
+  // Today's package also shows the streak it just kept.
+  const daily = useQuery({
+    queryKey: ["daily", guest?.id ?? null],
+    enabled: !!data?.exam?.dailyDate && !!guest,
+    queryFn: () => fetchDaily(guest),
+  });
+  const streak = daily.data && daily.data.package?.id === examId ? daily.data.streak.current : null;
+  const back: ResultBack = data?.exam?.dailyDate
+    ? { to: "/hari-ini", label: "Hari ini" }
+    : { to: "/katalog", label: "Latihan" };
+
   return (
     <AppShell pathname={pathname} tone="dark">
       {isLoading ? (
@@ -51,14 +62,12 @@ function HasilPage() {
             <FileQuestion className="h-7 w-7" />
           </span>
           <h1 className="type-title-3 mt-6">Hasil tidak ditemukan.</h1>
-          <p className="type-callout mt-2 text-muted-foreground">
-            Katalognya mungkin sudah dihapus.
-          </p>
+          <p className="type-callout mt-2 text-muted-foreground">Paketnya mungkin sudah dihapus.</p>
           <Link
-            to="/katalog"
+            to="/hari-ini"
             className={buttonVariants({ variant: "secondary", className: "mt-8" })}
           >
-            Kembali ke katalog
+            Ke Hari ini
           </Link>
         </div>
       ) : (
@@ -69,6 +78,8 @@ function HasilPage() {
           meId={data.meId}
           fresh={!!baru}
           guestName={guestName}
+          streak={streak}
+          back={back}
         />
       )}
     </AppShell>

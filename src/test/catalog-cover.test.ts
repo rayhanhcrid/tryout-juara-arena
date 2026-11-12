@@ -2,20 +2,25 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { coverPhotoOf } from "@/components/catalog-cover";
+import { coverPhotoOf, monogram } from "@/components/catalog-cover";
 import { COVER_PHOTO_LIST } from "@/lib/cover-photos";
 
 describe("cover photos", () => {
-  it("picks the most specific subject photo", () => {
-    expect(coverPhotoOf("TKA Geografi 2025")?.src).toBe("/covers/tka-geografi.webp");
-    expect(coverPhotoOf("Geografi")?.src).toBe("/covers/geografi.webp");
-    expect(coverPhotoOf("Try Out Matematika Dasar")?.src).toBe("/covers/matematika-dasar.webp");
-    expect(coverPhotoOf("Matematika")?.src).toBe("/covers/matematika.webp");
-    expect(coverPhotoOf("Pendidikan Pancasila")?.src).toBe("/covers/pancasila.webp");
+  it("picks the subtes before the selection", () => {
+    expect(coverPhotoOf("Latihan TWK: Pilar Negara")?.src).toBe("/covers/pancasila.webp");
+    expect(coverPhotoOf("SKD · TIU Deret Angka")?.src).toBe("/covers/matematika.webp");
+    expect(coverPhotoOf("Paket Harian SKD #1")?.src).toBe("/covers/sejarah.webp");
+    expect(coverPhotoOf("ODP Bank: Bahasa Inggris")?.src).toBe("/covers/bahasa-inggris.webp");
+    expect(coverPhotoOf("Rekrutmen BUMN: TKD")?.src).toBe("/covers/ekonomi.webp");
   });
 
   it("has no photo for an unknown subject", () => {
     expect(coverPhotoOf("Seni Budaya")).toBeNull();
+  });
+
+  it("monograms the first meaningful word", () => {
+    expect(monogram("Paket Harian Psikologi")).toBe("P");
+    expect(monogram("Paket #3 Wawancara")).toBe("W");
   });
 
   it("ships every photo it credits, each with an author and license", () => {

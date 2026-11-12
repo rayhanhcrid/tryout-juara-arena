@@ -11,25 +11,29 @@ import { cn } from "@/lib/utils";
 const OPTION_KEYS = ["a", "b", "c", "d"] as const;
 type OptionKey = (typeof OPTION_KEYS)[number];
 
-/** The five questions of the seeded "Try Out Matematika Dasar" catalog. */
+/** Five TIU-style example questions; the demo grades them in the browser and saves nothing. */
 const QUESTIONS: { text: string; options: Record<OptionKey, string>; key: OptionKey }[] = [
   {
-    text: "Hasil dari 12 + 8 × 2 adalah …",
-    options: { a: "40", b: "28", c: "30", d: "32" },
-    key: "b",
-  },
-  {
-    text: "Jika x + 5 = 12, maka nilai x adalah …",
-    options: { a: "5", b: "6", c: "7", d: "8" },
+    text: "4, 7, 12, 19, 28, … Bilangan berikutnya adalah …",
+    options: { a: "37", b: "38", c: "39", d: "41" },
     key: "c",
   },
   {
-    text: "Luas persegi dengan sisi 7 cm adalah …",
-    options: { a: "14 cm²", b: "28 cm²", c: "42 cm²", d: "49 cm²" },
+    text: "BUKU : PERPUSTAKAAN = OBAT : …",
+    options: { a: "Dokter", b: "Apotek", c: "Pasien", d: "Resep" },
+    key: "b",
+  },
+  {
+    text: "Jika 3x − 5 = 16, maka nilai x adalah …",
+    options: { a: "5", b: "6", c: "7", d: "8" },
+    key: "c",
+  },
+  { text: "25% dari 360 adalah …", options: { a: "90", b: "72", c: "80", d: "120" }, key: "a" },
+  {
+    text: "Lawan kata OPTIMIS adalah …",
+    options: { a: "Yakin", b: "Realistis", c: "Percaya diri", d: "Pesimis" },
     key: "d",
   },
-  { text: "25% dari 200 adalah …", options: { a: "25", b: "50", c: "75", d: "100" }, key: "b" },
-  { text: "Nilai dari 3³ adalah …", options: { a: "6", b: "9", c: "27", d: "81" }, key: "c" },
 ];
 
 const DEMO_MS = 2 * 60_000;
@@ -129,9 +133,7 @@ export function DemoExam({ variant }: { variant: "laptop" | "phone" }) {
         )}
       >
         <div className="min-w-0">
-          <p className="truncate text-[14px] font-semibold tracking-[-0.015em]">
-            Try Out Matematika Dasar
-          </p>
+          <p className="truncate text-[14px] font-semibold tracking-[-0.015em]">Contoh Paket TIU</p>
           <p className="tabular text-[12px] text-muted-foreground">
             Soal {current + 1} dari {QUESTIONS.length} · {answeredCount} terjawab
           </p>
@@ -255,10 +257,10 @@ export function DemoExam({ variant }: { variant: "laptop" | "phone" }) {
                 : `Skormu ${score} dari ${QUESTIONS.length}.`}
             </p>
             <p className="mt-1.5 max-w-xs text-[13px] text-muted-foreground">
-              Di try out sungguhan, skor ini langsung masuk papan peringkat.
+              Di paket sungguhan, skor ini masuk papan peringkat dan pembahasannya langsung terbuka.
             </p>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-              <Link to="/katalog" className={buttonVariants({ size: "sm" })}>
+              <Link to="/hari-ini" className={buttonVariants({ size: "sm" })}>
                 Coba sungguhan
               </Link>
               <Button variant="ghost" size="sm" onClick={reset}>

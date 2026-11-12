@@ -12,9 +12,9 @@ export const Route = createFileRoute("/peringkat/$examId")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Peringkat — TryOutKu" },
-      { name: "description", content: "Papan peringkat satu mata pelajaran di TryOutKu." },
-      { property: "og:title", content: "Peringkat — TryOutKu" },
+      { title: "Peringkat — lulustes" },
+      { name: "description", content: "Papan peringkat satu paket soal di lulustes." },
+      { property: "og:title", content: "Peringkat — lulustes" },
       { property: "og:type", content: "website" },
     ],
   }),
@@ -42,13 +42,13 @@ function PeringkatPage() {
           </span>
           <h1 className="type-title-3 mt-6">Peringkat tidak bisa dimuat.</h1>
           <p className="type-callout mt-2 text-muted-foreground">
-            Katalognya mungkin sudah dihapus, atau server sedang tidak bisa membaca database.
+            Paketnya mungkin sudah dihapus, atau server sedang tidak bisa membaca database.
           </p>
           <Link
             to="/katalog"
             className={buttonVariants({ variant: "secondary", className: "mt-8" })}
           >
-            Kembali ke katalog
+            Ke Latihan
           </Link>
         </div>
       ) : (

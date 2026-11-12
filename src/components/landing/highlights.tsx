@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Check, ChevronRight, RotateCw, TimerOff } from "lucide-react";
+import { Check, ChevronRight, Download, X } from "lucide-react";
+import { WeekStrip } from "@/components/daily/week-strip";
 import { NavigatorGrid, NavigatorLegend, type CellState } from "@/components/exam/navigator-grid";
 import { Podium, type BoardEntry } from "@/components/leaderboard";
 import { cn } from "@/lib/utils";
+import type { DailyDay } from "@/lib/participant-api";
 
 function Tile({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
@@ -28,9 +30,8 @@ function TileText({ title, body }: { title: string; body: string }) {
   );
 }
 
-function CountdownDial() {
-  const size = 220;
-  const stroke = 14;
+function CountdownDial({ size = 220 }: { size?: number }) {
+  const stroke = Math.round(size / 15);
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   return (
@@ -63,7 +64,10 @@ function CountdownDial() {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="tabular font-display text-[52px] font-semibold tracking-[-0.04em] text-destructive-ink">
+        <span
+          className="tabular font-display font-semibold tracking-[-0.04em] text-destructive-ink"
+          style={{ fontSize: size * 0.24 }}
+        >
           00:09
         </span>
         <span className="text-[13px] text-muted-foreground">sisa waktu</span>
@@ -100,46 +104,146 @@ const PODIUM_DEMO: BoardEntry[] = [
     rank: 1,
     user_id: "contoh-1",
     nama: "Nadia Putri",
-    score: 19,
-    total: 20,
-    submitted_at: "2026-10-01T08:12:00Z",
+    score: 12,
+    total: 12,
+    submitted_at: "2026-11-12T00:12:00Z",
   },
   {
     rank: 2,
     user_id: "contoh-2",
     nama: "Raka Pratama",
-    score: 19,
-    total: 20,
-    submitted_at: "2026-10-01T09:40:00Z",
+    score: 11,
+    total: 12,
+    submitted_at: "2026-11-12T01:40:00Z",
   },
   {
     rank: 3,
     user_id: "contoh-3",
     nama: "Sinta Wulandari",
-    score: 18,
-    total: 20,
-    submitted_at: "2026-10-02T07:05:00Z",
+    score: 11,
+    total: 12,
+    submitted_at: "2026-11-12T02:05:00Z",
   },
 ];
+
+/** The last week of an example routine; Sunday had no package, so it did not break it. */
+const STREAK_DEMO: DailyDay[] = [
+  { date: "2026-11-06", package: true, done: true },
+  { date: "2026-11-07", package: true, done: true },
+  { date: "2026-11-08", package: false, done: false },
+  { date: "2026-11-09", package: true, done: true },
+  { date: "2026-11-10", package: true, done: true },
+  { date: "2026-11-11", package: true, done: true },
+  { date: "2026-11-12", package: true, done: true },
+];
+
+function ReviewDemoRow({ ok, label, tag }: { ok: boolean; label: string; tag: string }) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-2xl px-3.5 py-2.5",
+        ok
+          ? "bg-success/[0.12] shadow-[inset_0_0_0_1px_rgb(48_209_88/0.45)]"
+          : "bg-destructive/[0.1] shadow-[inset_0_0_0_1px_rgb(255_69_58/0.45)]",
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "flex h-7 w-7 items-center justify-center rounded-full",
+          ok ? "bg-success text-black" : "bg-destructive text-white",
+        )}
+      >
+        {ok ? (
+          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+        ) : (
+          <X className="h-3.5 w-3.5" strokeWidth={3} />
+        )}
+      </span>
+      <span className="flex-1 text-[15px]">{label}</span>
+      <span
+        className={cn(
+          "text-[12px] font-semibold",
+          ok ? "text-success-ink" : "text-destructive-ink",
+        )}
+      >
+        {tag}
+      </span>
+    </div>
+  );
+}
 
 export function Highlights() {
   return (
     <section id="fitur" className="scroll-mt-14 bg-background py-24 sm:py-32">
       <div className="mx-auto max-w-[1080px] px-5 sm:px-8">
-        <h2 className="type-title-1 max-w-[18ch]">Detail kecil yang bikin tenang.</h2>
+        <h2 className="type-title-1 max-w-[18ch]">Yang bikin kamu kembali besok.</h2>
 
         <div className="mt-12 grid gap-4 sm:gap-5 lg:grid-cols-6">
+          {/* The routine is the product, so it takes the widest tile. */}
           <Tile className="flex flex-col gap-10 lg:col-span-4 lg:flex-row lg:items-center lg:justify-between">
             <TileText
-              title="Waktu habis? Tetap terkirim."
-              body="Saat timer menyentuh nol, semua jawaban yang sudah kamu isi langsung dikirim dan dinilai. Tidak ada yang hilang."
+              title="Satu paket, setiap hari."
+              body="Rutinitas yang ringan untuk dijaga. Kirim paket di harinya dan hitungan hari beruntunmu bertambah; hari tanpa paket tidak memutusnya."
             />
-            <div className="flex flex-col items-center gap-5 self-center">
-              <CountdownDial />
-              <div className="flex items-center gap-2 rounded-2xl bg-secondary px-4 py-2.5 text-[13px] font-medium">
-                <TimerOff className="h-4 w-4 text-link" />
-                Waktu habis! Jawabanmu dikirim otomatis.
+            <div className="w-full max-w-[19rem] shrink-0 self-center rounded-[22px] bg-secondary p-5">
+              <p className="flex items-baseline gap-2">
+                <span className="tabular font-display text-[52px] font-bold leading-none tracking-[-0.045em]">
+                  12
+                </span>
+                <span className="text-[17px] font-semibold">hari beruntun</span>
+              </p>
+              <WeekStrip days={STREAK_DEMO} today="2026-11-12" className="mt-5" />
+              <p className="mt-4 text-center type-footnote text-muted-foreground">Contoh</p>
+            </div>
+          </Tile>
+
+          <Tile className="flex flex-col gap-8 lg:col-span-2">
+            <TileText
+              title="Tahu salahnya di mana."
+              body="Setiap soal datang dengan kunci dan pembahasan, jadi kesalahan hari ini tidak terulang besok."
+            />
+            <div className="mt-auto space-y-2">
+              <ReviewDemoRow ok={false} label="Pasti" tag="Jawabanmu" />
+              <ReviewDemoRow ok label="Taksa" tag="Kunci" />
+            </div>
+          </Tile>
+
+          <Tile className="flex flex-col gap-8 lg:col-span-2">
+            <TileText
+              title="Laporan yang bisa diunduh."
+              body="Skor per subtes, subtes yang paling perlu diulang, dan semua pembahasan dalam satu PDF."
+            />
+            <div className="mt-auto rounded-2xl bg-secondary p-4">
+              {[
+                { name: "TWK", value: "4/5", pct: 80, bar: "bg-success" },
+                { name: "TIU", value: "5/7", pct: 71, bar: "bg-primary" },
+                { name: "TKP", value: "3/6", pct: 50, bar: "bg-warning" },
+              ].map((s) => (
+                <div key={s.name} className="flex items-center gap-3 py-1.5 text-[13px]">
+                  <span className="w-9 font-semibold">{s.name}</span>
+                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-fill">
+                    <span
+                      className={cn("block h-full rounded-full", s.bar)}
+                      style={{ width: `${s.pct}%` }}
+                    />
+                  </span>
+                  <span className="tabular w-8 text-right text-muted-foreground">{s.value}</span>
+                </div>
+              ))}
+              <div className="mt-3 flex h-9 items-center justify-center gap-1.5 rounded-full bg-primary text-[13px] font-medium text-primary-foreground">
+                <Download className="h-4 w-4" /> Unduh PDF
               </div>
+            </div>
+          </Tile>
+
+          <Tile className="flex flex-col gap-8 lg:col-span-2">
+            <TileText
+              title="Waktu habis? Tetap terkirim."
+              body="Saat timer menyentuh nol, semua jawaban yang sudah kamu isi langsung dikirim dan dinilai."
+            />
+            <div className="mt-auto self-center">
+              <CountdownDial size={168} />
             </div>
           </Tile>
 
@@ -154,91 +258,11 @@ export function Highlights() {
             </div>
           </Tile>
 
-          <Tile className="flex flex-col gap-8 lg:col-span-2">
-            <TileText
-              title="Tanpa daftar akun."
-              body="Cukup tulis nama sebelum mulai. Nama itulah yang tampil di papan peringkat."
-            />
-            <div className="mt-auto space-y-3">
-              <div className="rounded-2xl bg-secondary px-4 py-3">
-                <p className="text-[11px] text-muted-foreground">Namamu</p>
-                <p className="text-[17px]">
-                  Nadia Putri
-                  <span className="ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-pulse-dot bg-link" />
-                </p>
-              </div>
-              <div className="flex h-11 items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground">
-                Mulai ujian
-              </div>
-            </div>
-          </Tile>
-
-          <Tile className="flex flex-col gap-8 lg:col-span-2">
-            <TileText
-              title="Tahan refresh."
-              body="Ter-refresh atau tak sengaja tertutup? Buka lagi di perangkat yang sama, timer dan jawabanmu masih di tempatnya."
-            />
-            <div className="mt-auto flex items-center gap-3 rounded-2xl bg-secondary p-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-link">
-                <RotateCw className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-semibold">Ujian dilanjutkan.</p>
-                <p className="tabular text-[13px] text-muted-foreground">
-                  18 jawaban dipulihkan · sisa 23:41
-                </p>
-              </div>
-              <Check className="h-5 w-5 text-success" strokeWidth={3} />
-            </div>
-          </Tile>
-
-          <Tile className="flex flex-col gap-8 lg:col-span-2">
-            <TileText
-              title="Soal bisa bergambar."
-              body="Bangun datar, grafik, atau tabel. Admin bisa menyertakan gambar di setiap soal."
-            />
-            <div className="light mt-auto rounded-2xl bg-card p-5">
-              <svg
-                viewBox="0 0 220 130"
-                className="w-full"
-                role="img"
-                aria-label="Segitiga siku-siku dengan alas 8 cm dan tinggi 6 cm"
-              >
-                <path
-                  d="M46 110 L196 110 L46 20 Z"
-                  className="fill-primary/10 stroke-primary"
-                  strokeWidth="2.5"
-                  strokeLinejoin="round"
-                />
-                <path d="M46 96 h14 v14" className="fill-none stroke-primary" strokeWidth="2" />
-                <text
-                  x="121"
-                  y="126"
-                  textAnchor="middle"
-                  className="fill-foreground text-[12px] font-semibold"
-                >
-                  8 cm
-                </text>
-                <text
-                  x="36"
-                  y="69"
-                  textAnchor="end"
-                  className="fill-foreground text-[12px] font-semibold"
-                >
-                  6 cm
-                </text>
-                <text x="132" y="58" className="fill-muted-foreground text-[13px] font-semibold">
-                  ?
-                </text>
-              </svg>
-            </div>
-          </Tile>
-
           <Tile className="grid gap-10 lg:col-span-4 lg:grid-cols-[1fr_1.15fr] lg:items-end">
             <div className="self-center">
               <TileText
                 title="Peringkat yang adil."
-                body="Setiap mata pelajaran punya papan sendiri. Yang dihitung skor terbaik tiap peserta; kalau sama, yang lebih dulu mengirim berada di atas."
+                body="Setiap paket punya papan sendiri. Yang dihitung percobaan pertama tiap peserta, karena setelah itu kunci jawabannya sudah terbuka."
               />
             </div>
             <div>
@@ -252,14 +276,14 @@ export function Highlights() {
           {/* The one light tile on the dark page: the door to the working world. */}
           <Tile className="light flex flex-col gap-8 lg:col-span-2">
             <TileText
-              title="Punya soal sendiri?"
-              body="Lewat panel admin, susun katalog, tulis dan urutkan soal, unggah gambar, serta atur durasinya."
+              title="Kabar seleksi, satu tempat."
+              body="Pengumuman CPNS, BUMN, dan ODP dikumpulkan di menu Berita, masing-masing dengan tautan ke sumber resminya."
             />
             <Link
-              to="/admin"
+              to="/berita"
               className="mt-auto inline-flex items-center gap-1 text-[17px] font-medium text-link hover:underline"
             >
-              Buka panel admin <ChevronRight className="h-4 w-4" />
+              Buka Berita <ChevronRight className="h-4 w-4" />
             </Link>
           </Tile>
         </div>

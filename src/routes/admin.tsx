@@ -4,8 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ActivityIndicator } from "@/components/activity-indicator";
 import { AdminGate } from "@/components/admin/admin-gate";
-import { AdminWorkspace, type WorkspaceActions } from "@/components/admin/admin-workspace";
+import {
+  AdminWorkspace,
+  type WorkspaceActions,
+  type WorkspaceView,
+} from "@/components/admin/admin-workspace";
 import { ExamFormDialog, type ExamFormValues } from "@/components/admin/exam-form-dialog";
+import { NewsFormDialog, type NewsFormValues } from "@/components/admin/news-form-dialog";
+import { NewsPanel } from "@/components/admin/news-panel";
 import {
   QuestionEditor,
   type QuestionDraft,
@@ -26,14 +32,17 @@ import {
   adminCreateExam,
   adminCreateQuestion,
   adminDeleteExam,
+  adminDeleteNews,
   adminDeleteQuestion,
   adminGetQuestions,
   adminListExams,
+  adminListNews,
   adminLogin,
   adminMoveQuestion,
-  adminSeedSmaCatalogs,
+  adminSaveNews,
   adminUpdateExam,
   adminUpdateQuestion,
+  type AdminNews,
   type AdminQuestion,
 } from "@/lib/admin.functions";
 import { storageGet, storageRemove, storageSet } from "@/lib/exam-session";
@@ -44,8 +53,8 @@ export const Route = createFileRoute("/admin")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Panel Admin — TryOutKu" },
-      { name: "description", content: "Kelola katalog ujian dan soal TryOutKu." },
+      { title: "Panel Admin — lulustes" },
+      { name: "description", content: "Kelola paket soal, paket harian, dan berita lulustes." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -104,6 +113,7 @@ function AdminPage() {
 type Confirm =
   | { kind: "exam"; id: string; title: string; attempts: number }
   | { kind: "question"; id: string; number: number }
+  | { kind: "news"; id: string; title: string }
   | null;
 
 function errorMessage(err: unknown): string {
@@ -112,6 +122,7 @@ function errorMessage(err: unknown): string {
 
 function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) {
   const queryClient = useQueryClient();
+  const [view, setView] = useState<WorkspaceView>("paket");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [examDialog, setExamDialog] = useState<{ open: boolean; editing: boolean }>({
     open: false,
@@ -121,9 +132,12 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
     open: false,
     index: null,
   });
+  const [newsDialog, setNewsDialog] = useState<{ open: boolean; editing: AdminNews | null }>({
+    open: false,
+    editing: null,
+  });
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [busyQuestionId, setBusyQuestionId] = useState<string | null>(null);
-  const [seeding, setSeeding] = useState(false);
 
   /** Expired sessions lock the panel instead of failing silently. */
   const guard = useCallback(
@@ -151,7 +165,7 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
     if (examsQuery.error) toast.error(guard(examsQuery.error));
   }, [examsQuery.error, guard]);
 
-  // On wide screens, open the first catalog straight away.
+  // On wide screens, open the first package straight away.
   const firstExamId = examsQuery.data?.[0]?.id ?? null;
   useEffect(() => {
     if (selectedId || !firstExamId) return;
@@ -171,6 +185,17 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
     if (questionsQuery.error) toast.error(guard(questionsQuery.error));
   }, [questionsQuery.error, guard]);
 
+  const newsQuery = useQuery({
+    queryKey: ["admin", "news", token],
+    enabled: view === "berita",
+    queryFn: async () => (await adminListNews({ data: { token } })).news,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (newsQuery.error) toast.error(guard(newsQuery.error));
+  }, [newsQuery.error, guard]);
+
   const refresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["admin"] });
   }, [queryClient]);
@@ -189,11 +214,11 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
     try {
       if (examDialog.editing && selected) {
         await adminUpdateExam({ data: { token, examId: selected.id, ...values } });
-        toast.success("Katalog diperbarui.");
+        toast.success("Paket diperbarui.");
       } else {
         const { examId } = await adminCreateExam({ data: { token, ...values } });
         setSelectedId(examId);
-        toast.success("Katalog dibuat. Sekarang tambahkan soalnya.");
+        toast.success("Paket dibuat. Sekarang tambahkan soal dan pembahasannya.");
       }
       await refresh();
     } catch (err) {
@@ -219,6 +244,16 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
     }
   }
 
+  async function saveNews(values: NewsFormValues) {
+    try {
+      await adminSaveNews({ data: { token, newsId: newsDialog.editing?.id ?? null, ...values } });
+      toast.success(newsDialog.editing ? "Berita diperbarui." : "Berita dimuat.");
+      await refresh();
+    } catch (err) {
+      throw new Error(guard(err));
+    }
+  }
+
   async function runDelete() {
     if (!confirm) return;
     const target = confirm;
@@ -227,11 +262,14 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
       if (target.kind === "exam") {
         await adminDeleteExam({ data: { token, examId: target.id } });
         setSelectedId(null);
-        toast.success("Katalog dihapus.");
-      } else {
+        toast.success("Paket dihapus.");
+      } else if (target.kind === "question") {
         setBusyQuestionId(target.id);
         await adminDeleteQuestion({ data: { token, questionId: target.id } });
         toast.success("Soal dihapus.");
+      } else {
+        await adminDeleteNews({ data: { token, newsId: target.id } });
+        toast.success("Berita dihapus.");
       }
       await refresh();
     } catch (err) {
@@ -252,30 +290,43 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
             options: editingQuestion.options,
             categories: editingQuestion.categories,
             answer: editingQuestion.answer,
+            section: editingQuestion.section,
+            explanation: editingQuestion.explanation,
           }
         : null,
     [editingQuestion],
   );
+  const examInitial = useMemo<ExamFormValues | null>(
+    () =>
+      examDialog.editing && selected
+        ? {
+            title: selected.title,
+            description: selected.description,
+            duration_minutes: selected.duration_minutes,
+            featured: selected.featured,
+            track: selected.track,
+            daily_date: selected.daily_date,
+          }
+        : null,
+    [examDialog.editing, selected],
+  );
+  const newsInitial = useMemo<NewsFormValues | null>(() => {
+    const n = newsDialog.editing;
+    return n
+      ? {
+          title: n.title,
+          summary: n.summary,
+          source_name: n.source_name,
+          source_url: n.source_url,
+          track: n.track,
+          published_on: n.published_on,
+        }
+      : null;
+  }, [newsDialog.editing]);
 
   const actions: WorkspaceActions = {
     onSelect: setSelectedId,
     onNewExam: () => setExamDialog({ open: true, editing: false }),
-    onSeed: async () => {
-      setSeeding(true);
-      try {
-        const { added, total } = await adminSeedSmaCatalogs({ data: { token } });
-        toast.success(
-          added > 0
-            ? `${added} katalog contoh SMA ditambahkan.`
-            : `Semua ${total} katalog contoh SMA sudah ada.`,
-        );
-        await refresh();
-      } catch (err) {
-        toast.error(guard(err));
-      } finally {
-        setSeeding(false);
-      }
-    },
     onEditExam: () => setExamDialog({ open: true, editing: true }),
     onDeleteExam: () =>
       selected &&
@@ -301,8 +352,18 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
   return (
     <>
       <AdminWorkspace
+        view={view}
+        onViewChange={setView}
+        news={
+          <NewsPanel
+            items={newsQuery.data ?? []}
+            loading={newsQuery.isLoading}
+            onNew={() => setNewsDialog({ open: true, editing: null })}
+            onEdit={(item) => setNewsDialog({ open: true, editing: item })}
+            onDelete={(item) => setConfirm({ kind: "news", id: item.id, title: item.title })}
+          />
+        }
         exams={exams}
-        seeding={seeding}
         loadingExams={examsQuery.isLoading}
         selectedId={selectedId}
         questions={questions}
@@ -314,16 +375,7 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
       <ExamFormDialog
         open={examDialog.open}
         onOpenChange={(open) => setExamDialog((d) => ({ ...d, open }))}
-        initial={
-          examDialog.editing && selected
-            ? {
-                title: selected.title,
-                description: selected.description,
-                duration_minutes: selected.duration_minutes,
-                featured: selected.featured,
-              }
-            : null
-        }
+        initial={examInitial}
         onSave={saveExam}
       />
 
@@ -334,21 +386,33 @@ function AdminConsole({ token, onLock }: { token: string; onLock: () => void }) 
         number={editor.index !== null ? editor.index + 1 : questions.length + 1}
         initial={editorInitial}
         initialImageUrl={editingQuestion?.imageUrl ?? null}
+        lastSection={questions[questions.length - 1]?.section ?? ""}
         onSave={saveQuestion}
+      />
+
+      <NewsFormDialog
+        open={newsDialog.open}
+        onOpenChange={(open) => setNewsDialog((d) => ({ ...d, open }))}
+        initial={newsInitial}
+        onSave={saveNews}
       />
 
       <AlertDialog open={!!confirm} onOpenChange={(open) => !open && setConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirm?.kind === "exam"
-                ? `Hapus “${confirm.title}”?`
-                : `Hapus soal ${confirm?.kind === "question" ? confirm.number : ""}?`}
+              {confirm?.kind === "question"
+                ? `Hapus soal ${confirm.number}?`
+                : confirm
+                  ? `Hapus “${confirm.title}”?`
+                  : ""}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirm?.kind === "exam"
-                ? `Semua soal${confirm.attempts > 0 ? ` dan ${confirm.attempts} percobaan peserta` : ""} di katalog ini ikut terhapus. Tindakan ini tidak bisa dibatalkan.`
-                : "Soal dan gambarnya akan dihapus. Skor yang sudah tercatat tidak berubah."}
+                ? `Semua soal${confirm.attempts > 0 ? ` dan ${confirm.attempts} percobaan peserta` : ""} di paket ini ikut terhapus. Tindakan ini tidak bisa dibatalkan.`
+                : confirm?.kind === "news"
+                  ? "Berita ini hilang dari menu Berita dan halaman Hari ini."
+                  : "Soal dan gambarnya akan dihapus. Skor yang sudah tercatat tidak berubah."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

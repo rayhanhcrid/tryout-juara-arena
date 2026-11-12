@@ -21,6 +21,30 @@ export function formatDate(iso: string): string {
   });
 }
 
+const WIB = "Asia/Jakarta";
+
+/** Today's date in WIB as "YYYY-MM-DD", the same day the database calls today. */
+export function todayWib(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: WIB }).format(now);
+}
+
+const DAY_STYLES = {
+  long: { weekday: "long", day: "numeric", month: "long", year: "numeric" },
+  short: { day: "numeric", month: "short" },
+  weekday: { weekday: "short" },
+} satisfies Record<string, Intl.DateTimeFormatOptions>;
+
+/**
+ * A calendar day stored as "YYYY-MM-DD" (a package date or a news date):
+ * "Kamis, 12 November 2026", "12 Nov", or "Kam". Read at noon WIB so no time
+ * zone can push it onto the neighbouring day.
+ */
+export function formatDay(day: string, style: keyof typeof DAY_STYLES = "long"): string {
+  const date = new Date(`${day}T12:00:00+07:00`);
+  if (Number.isNaN(date.getTime())) return day;
+  return date.toLocaleDateString("id-ID", { ...DAY_STYLES[style], timeZone: WIB });
+}
+
 export function percent(score: number, total: number): number {
   return total > 0 ? Math.round((score / total) * 100) : 0;
 }

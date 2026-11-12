@@ -6,6 +6,7 @@ import {
   type AnswerKey,
   type QuestionKind,
 } from "@/lib/question-kinds";
+import { isTrack, toTrack, type Track } from "@/lib/tracks";
 
 /**
  * Admin server functions. Every call re-verifies the admin token
@@ -55,6 +56,9 @@ export type AdminExam = {
   description: string;
   duration_minutes: number;
   featured: boolean;
+  track: Track;
+  /** "YYYY-MM-DD" (WIB) when scheduled as that day's package. */
+  daily_date: string | null;
   questionCount: number;
   attemptCount: number;
 };
@@ -64,15 +68,16 @@ export const adminListExams = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     await assertAdmin(data.token);
     const admin = await adminClient();
-    // Same order participants see: pinned first, then oldest first.
+    // Same order participants see: pinned first, then newest package day, then oldest first.
     const { data: rows, error } = await admin
       .from("exams")
       .select(
-        "id, title, description, duration_minutes, featured, questions(count), attempts(count)",
+        "id, title, description, duration_minutes, featured, track, daily_date, questions(count), attempts(count)",
       )
       .order("featured", { ascending: false })
+      .order("daily_date", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: true });
-    if (error) throw new Error("Gagal memuat daftar katalog.");
+    if (error) throw new Error("Gagal memuat daftar paket.");
     const exams: AdminExam[] = (rows ?? []).map((r) => {
       const counted = r as { questions?: { count: number }[]; attempts?: { count: number }[] };
       return {
@@ -81,6 +86,8 @@ export const adminListExams = createServerFn({ method: "GET" })
         description: r.description,
         duration_minutes: r.duration_minutes,
         featured: r.featured,
+        track: toTrack(r.track),
+        daily_date: r.daily_date,
         questionCount: counted.questions?.[0]?.count ?? 0,
         attemptCount: counted.attempts?.[0]?.count ?? 0,
       };
@@ -93,20 +100,38 @@ type ExamFields = {
   description: string;
   duration_minutes: number;
   featured: boolean;
+  track: Track;
+  daily_date: string | null;
 };
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 function validateExamFields(input: ExamFields) {
   const title = input.title.trim();
-  if (!title) throw new Error("Judul katalog tidak boleh kosong.");
+  if (!title) throw new Error("Judul paket tidak boleh kosong.");
   if (!Number.isFinite(input.duration_minutes) || input.duration_minutes <= 0) {
     throw new Error("Durasi harus lebih dari 0 menit.");
+  }
+  if (!isTrack(input.track)) throw new Error("Pilih jalur paket.");
+  const day = input.daily_date?.trim() || null;
+  if (day && (!DAY.test(day) || Number.isNaN(Date.parse(day)))) {
+    throw new Error("Tanggal paket harian tidak valid.");
   }
   return {
     title,
     description: input.description.trim(),
     duration_minutes: Math.round(input.duration_minutes),
     featured: input.featured === true,
+    track: input.track,
+    daily_date: day,
   };
+}
+
+/** One package per day: say which rule was broken instead of a generic failure. */
+function examSaveError(error: { code?: string } | null, fallback: string): Error {
+  return new Error(
+    error?.code === "23505" ? "Tanggal itu sudah dipakai paket harian lain." : fallback,
+  );
 }
 
 export const adminCreateExam = createServerFn({ method: "POST" })
@@ -116,7 +141,7 @@ export const adminCreateExam = createServerFn({ method: "POST" })
     const admin = await adminClient();
     const fields = validateExamFields(data);
     const { data: exam, error } = await admin.from("exams").insert(fields).select("id").single();
-    if (error || !exam) throw new Error("Gagal membuat katalog ujian.");
+    if (error || !exam) throw examSaveError(error, "Gagal membuat paket soal.");
     return { examId: exam.id as string };
   });
 
@@ -127,7 +152,7 @@ export const adminUpdateExam = createServerFn({ method: "POST" })
     const admin = await adminClient();
     const fields = validateExamFields(data);
     const { error } = await admin.from("exams").update(fields).eq("id", data.examId);
-    if (error) throw new Error("Gagal menyimpan perubahan katalog.");
+    if (error) throw examSaveError(error, "Gagal menyimpan perubahan paket.");
     return { ok: true };
   });
 
@@ -143,7 +168,7 @@ export const adminDeleteExam = createServerFn({ method: "POST" })
       .eq("exam_id", data.examId)
       .not("image_path", "is", null);
     const { error } = await admin.from("exams").delete().eq("id", data.examId);
-    if (error) throw new Error("Gagal menghapus katalog ujian.");
+    if (error) throw new Error("Gagal menghapus paket soal.");
     const paths = (withImages ?? []).map((q) => q.image_path).filter((p): p is string => !!p);
     await removeImages(admin, paths);
     return { ok: true };
@@ -159,6 +184,8 @@ export type AdminQuestion = {
   options: string[];
   categories: string[] | null;
   answer: AnswerKey;
+  section: string | null;
+  explanation: string;
 };
 
 export const adminGetQuestions = createServerFn({ method: "GET" })
@@ -194,6 +221,8 @@ export const adminGetQuestions = createServerFn({ method: "GET" })
         options: q.options as string[],
         categories: (q.categories as string[] | null) ?? null,
         answer: q.answer as AnswerKey,
+        section: q.section ?? null,
+        explanation: q.explanation ?? "",
       });
     }
     return { questions };
@@ -252,17 +281,33 @@ type QuestionFields = {
   options: string[];
   categories: string[] | null;
   answer: AnswerKey;
+  section: string | null;
+  explanation: string;
 };
+
+const MAX_SECTION = 40;
+const MAX_EXPLANATION = 8000;
 
 /** The same rules the editor applies; the database's shape check backs both up. */
 function validateQuestionFields(data: QuestionFields) {
-  return validateQuestion({
+  const valid = validateQuestion({
     kind: data.kind,
     text: data.text,
     options: Array.isArray(data.options) ? data.options.map(String) : [],
     categories: Array.isArray(data.categories) ? data.categories.map(String) : null,
     answer: data.answer,
   });
+  const section = String(data.section ?? "")
+    .trim()
+    .replace(/\s+/g, " ");
+  if (section.length > MAX_SECTION) {
+    throw new Error(`Nama subtes maksimal ${MAX_SECTION} huruf.`);
+  }
+  const explanation = String(data.explanation ?? "").trim();
+  if (explanation.length > MAX_EXPLANATION) {
+    throw new Error("Pembahasan terlalu panjang.");
+  }
+  return { ...valid, section: section || null, explanation };
 }
 
 export const adminCreateQuestion = createServerFn({ method: "POST" })
@@ -411,46 +456,81 @@ export const adminDeleteQuestion = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Adds the demo SMA catalogs. Idempotent: catalogs whose title already exists are skipped. */
-export const adminSeedSmaCatalogs = createServerFn({ method: "POST" })
+export type AdminNews = {
+  id: string;
+  title: string;
+  summary: string;
+  source_name: string;
+  source_url: string;
+  track: Track;
+  published_on: string;
+};
+
+type NewsFields = Omit<AdminNews, "id">;
+
+function validateNewsFields(input: NewsFields): NewsFields {
+  const title = String(input.title ?? "").trim();
+  if (!title) throw new Error("Judul berita tidak boleh kosong.");
+  let url: URL;
+  try {
+    url = new URL(String(input.source_url ?? "").trim());
+  } catch {
+    throw new Error("Tautan sumber harus alamat lengkap, misal https://….");
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    throw new Error("Tautan sumber harus diawali https://.");
+  }
+  if (!isTrack(input.track)) throw new Error("Pilih jalur berita.");
+  const day = String(input.published_on ?? "").trim();
+  if (!DAY.test(day) || Number.isNaN(Date.parse(day))) {
+    throw new Error("Tanggal berita tidak valid.");
+  }
+  return {
+    title,
+    summary: String(input.summary ?? "").trim(),
+    // Default to the site's host so every item names where it came from.
+    source_name: String(input.source_name ?? "").trim() || url.hostname.replace(/^www\./, ""),
+    source_url: url.toString(),
+    track: input.track,
+    published_on: day,
+  };
+}
+
+export const adminListNews = createServerFn({ method: "GET" })
   .inputValidator((input: AdminInput) => input)
   .handler(async ({ data }) => {
     await assertAdmin(data.token);
     const admin = await adminClient();
-    const { SMA_CATALOGS } = await import("@/lib/sma-catalog");
+    const { data: rows, error } = await admin
+      .from("news")
+      .select("id, title, summary, source_name, source_url, track, published_on")
+      .order("published_on", { ascending: false })
+      .order("created_at", { ascending: false });
+    if (error) throw new Error("Gagal memuat berita.");
+    const news: AdminNews[] = (rows ?? []).map((r) => ({ ...r, track: toTrack(r.track) }));
+    return { news };
+  });
 
-    const { data: existing, error: listError } = await admin.from("exams").select("title");
-    if (listError) throw new Error("Gagal memeriksa katalog yang ada.");
-    const have = new Set((existing ?? []).map((e) => e.title.trim().toLowerCase()));
+/** Create a news item, or update it when `newsId` is given. */
+export const adminSaveNews = createServerFn({ method: "POST" })
+  .inputValidator((input: AdminInput & NewsFields & { newsId: string | null }) => input)
+  .handler(async ({ data }) => {
+    await assertAdmin(data.token);
+    const admin = await adminClient();
+    const fields = validateNewsFields(data);
+    const { error } = data.newsId
+      ? await admin.from("news").update(fields).eq("id", data.newsId)
+      : await admin.from("news").insert(fields);
+    if (error) throw new Error("Gagal menyimpan berita.");
+    return { ok: true };
+  });
 
-    let added = 0;
-    for (const cat of SMA_CATALOGS) {
-      if (have.has(cat.title.toLowerCase())) continue;
-      const { data: exam, error } = await admin
-        .from("exams")
-        .insert({
-          title: cat.title,
-          description: cat.description,
-          duration_minutes: cat.duration_minutes,
-        })
-        .select("id")
-        .single();
-      if (error || !exam) throw new Error(`Gagal membuat katalog ${cat.title}.`);
-      const { error: qError } = await admin.from("questions").insert(
-        cat.questions.map((q, i) => ({
-          exam_id: exam.id,
-          order_index: i + 1,
-          kind: "single",
-          text: q.text,
-          options: q.options,
-          answer: q.key,
-        })),
-      );
-      if (qError) {
-        await admin.from("exams").delete().eq("id", exam.id);
-        throw new Error(`Gagal menyimpan soal ${cat.title}.`);
-      }
-      added += 1;
-    }
-    return { added, total: SMA_CATALOGS.length };
+export const adminDeleteNews = createServerFn({ method: "POST" })
+  .inputValidator((input: AdminInput & { newsId: string }) => input)
+  .handler(async ({ data }) => {
+    await assertAdmin(data.token);
+    const admin = await adminClient();
+    const { error } = await admin.from("news").delete().eq("id", data.newsId);
+    if (error) throw new Error("Gagal menghapus berita.");
+    return { ok: true };
   });

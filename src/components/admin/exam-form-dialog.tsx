@@ -13,6 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { SegmentedControl } from "@/components/segmented-control";
+import { formatDay, todayWib } from "@/lib/format";
+import { TRACKS, trackLabel, type Track } from "@/lib/tracks";
 import { cn } from "@/lib/utils";
 
 export type ExamFormValues = {
@@ -20,9 +23,14 @@ export type ExamFormValues = {
   description: string;
   duration_minutes: number;
   featured: boolean;
+  track: Track;
+  /** "YYYY-MM-DD" (WIB) to publish it as that day's package; null for a regular package. */
+  daily_date: string | null;
 };
 
-const PRESETS = [15, 30, 45, 60, 90, 120];
+const PRESETS = [10, 15, 30, 45, 60, 100];
+
+const TRACK_OPTIONS = TRACKS.map((t) => ({ value: t, label: trackLabel(t) }));
 
 export function ExamFormDialog({
   open,
@@ -40,6 +48,9 @@ export function ExamFormDialog({
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState(30);
   const [featured, setFeatured] = useState(false);
+  const [track, setTrack] = useState<Track>("cpns");
+  const [daily, setDaily] = useState(false);
+  const [dailyDate, setDailyDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,15 +58,19 @@ export function ExamFormDialog({
     if (!open) return;
     setTitle(initial?.title ?? "");
     setDescription(initial?.description ?? "");
-    setDuration(initial?.duration_minutes ?? 30);
+    setDuration(initial?.duration_minutes ?? 15);
     setFeatured(initial?.featured ?? false);
+    setTrack(initial?.track ?? "cpns");
+    setDaily(!!initial?.daily_date);
+    setDailyDate(initial?.daily_date ?? todayWib());
     setError(null);
   }, [open, initial]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim()) return setError("Judul katalog wajib diisi.");
+    if (!title.trim()) return setError("Judul paket wajib diisi.");
     if (!Number.isFinite(duration) || duration < 1) return setError("Durasi minimal 1 menit.");
+    if (daily && !dailyDate) return setError("Pilih tanggal terbit paket harian.");
     setSaving(true);
     setError(null);
     try {
@@ -64,32 +79,41 @@ export function ExamFormDialog({
         description: description.trim(),
         duration_minutes: duration,
         featured,
+        track,
+        daily_date: daily ? dailyDate : null,
       });
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan katalog.");
+      setError(err instanceof Error ? err.message : "Gagal menyimpan paket.");
     } finally {
       setSaving(false);
     }
   }
 
+  const today = todayWib();
+
   return (
     <Dialog open={open} onOpenChange={(o) => !saving && onOpenChange(o)}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{initial ? "Edit katalog" : "Katalog baru"}</DialogTitle>
+          <DialogTitle>{initial ? "Edit paket" : "Paket baru"}</DialogTitle>
           <DialogDescription>
             Peserta melihat judul, deskripsi, dan durasi sebelum mulai.
           </DialogDescription>
         </DialogHeader>
-        <form id="exam-form" onSubmit={handleSubmit} className="space-y-5" noValidate>
+        <form
+          id="exam-form"
+          onSubmit={handleSubmit}
+          className="max-h-[65dvh] space-y-5 overflow-y-auto px-0.5"
+          noValidate
+        >
           <div className="space-y-2">
             <Label htmlFor="exam-title">Judul</Label>
             <Input
               id="exam-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="misal: Try Out Bahasa Inggris"
+              placeholder="misal: Paket Harian SKD #2"
               autoFocus
             />
           </div>
@@ -99,9 +123,60 @@ export function ExamFormDialog({
               id="exam-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Materi yang diujikan, tingkat kesulitan, atau catatan untuk peserta."
+              placeholder="Subtes yang diujikan, jumlah soal per subtes, atau catatan untuk peserta."
               rows={3}
             />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium leading-none">Jalur</p>
+            <SegmentedControl
+              value={track}
+              onChange={setTrack}
+              options={TRACK_OPTIONS}
+              ariaLabel="Jalur paket"
+            />
+            <p className="text-[13px] text-muted-foreground">
+              Menentukan filter di halaman Latihan. Umum tampil di semua jalur.
+            </p>
+          </div>
+          <div className="rounded-xl bg-fill px-4 py-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Label htmlFor="exam-daily">Jadikan paket harian</Label>
+                <p id="exam-daily-hint" className="mt-0.5 text-[13px] text-muted-foreground">
+                  Tampil di Hari ini pada tanggalnya, dan baru bisa dikerjakan mulai tanggal itu
+                  (WIB). Satu tanggal, satu paket.
+                </p>
+              </div>
+              <Switch
+                id="exam-daily"
+                checked={daily}
+                onCheckedChange={setDaily}
+                aria-describedby="exam-daily-hint"
+                className="mt-0.5"
+              />
+            </div>
+            {daily ? (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Input
+                  id="exam-daily-date"
+                  type="date"
+                  aria-label="Tanggal terbit"
+                  value={dailyDate}
+                  onChange={(e) => setDailyDate(e.target.value)}
+                  className="h-10 w-auto bg-card"
+                />
+                <span className="text-[13px] text-muted-foreground">
+                  {dailyDate
+                    ? dailyDate === today
+                      ? "Terbit hari ini."
+                      : dailyDate > today
+                        ? `Terbit ${formatDay(dailyDate, "long")}; sampai saat itu tersembunyi.`
+                        : `Sudah terbit ${formatDay(dailyDate, "long")}.`
+                    : ""}
+                </span>
+              </div>
+            ) : null}
           </div>
           <div className="space-y-2">
             <Label htmlFor="exam-duration">Durasi</Label>
@@ -157,7 +232,7 @@ export function ExamFormDialog({
             <div>
               <Label htmlFor="exam-featured">Tampilkan paling awal</Label>
               <p id="exam-featured-hint" className="mt-0.5 text-[13px] text-muted-foreground">
-                Katalog yang disematkan muncul pertama di beranda dan halaman Katalog.
+                Paket yang disematkan muncul pertama di halaman Latihan.
               </p>
             </div>
             <Switch
@@ -179,7 +254,7 @@ export function ExamFormDialog({
             Batal
           </Button>
           <Button type="submit" form="exam-form" disabled={saving}>
-            {saving ? "Menyimpan…" : initial ? "Simpan" : "Buat katalog"}
+            {saving ? "Menyimpan…" : initial ? "Simpan" : "Buat paket"}
           </Button>
         </DialogFooter>
       </DialogContent>

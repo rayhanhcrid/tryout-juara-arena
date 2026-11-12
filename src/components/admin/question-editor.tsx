@@ -30,13 +30,29 @@ export type QuestionDraft = {
   options: string[];
   categories: string[] | null;
   answer: AnswerKey;
+  section: string | null;
+  explanation: string;
 };
 
 export type QuestionSavePayload = ValidQuestion & {
+  section: string | null;
+  explanation: string;
   imageBase64: string | null;
   imageName: string | null;
   removeImage: boolean;
 };
+
+/** Common subtes names, offered as suggestions; any other name works too. */
+const SECTION_SUGGESTIONS = [
+  "TWK",
+  "TIU",
+  "TKP",
+  "TKD",
+  "AKHLAK",
+  "Bahasa Inggris",
+  "Psikotes",
+  "TPA",
+];
 
 const ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -72,24 +88,34 @@ type Work = {
   statements: string[];
   categories: string[];
   rowKeys: (number | null)[];
+  section: string;
+  explanation: string;
 };
 
-function workFrom(initial: QuestionDraft | null): Work {
+/**
+ * A new question starts from the last subtes used, so a run of TIU questions
+ * does not need the name typed each time. SKD questions have five options.
+ */
+function workFrom(initial: QuestionDraft | null, lastSection: string): Work {
   const base: Work = {
     kind: "single",
     text: "",
-    choices: ["", "", "", ""],
+    choices: ["", "", "", "", ""],
     singleKey: "",
     multiKeys: [],
     statements: ["", "", ""],
     categories: [...(CATEGORY_PRESETS[0] ?? ["Benar", "Salah"])],
     rowKeys: [null, null, null],
+    section: lastSection,
+    explanation: "",
   };
   if (!initial) return base;
   const keys = Array.isArray(initial.answer) ? initial.answer : [];
+  const shared = { section: initial.section ?? "", explanation: initial.explanation };
   if (initial.kind === "category") {
     return {
       ...base,
+      ...shared,
       kind: "category",
       text: initial.text,
       statements: initial.options,
@@ -99,6 +125,7 @@ function workFrom(initial: QuestionDraft | null): Work {
   }
   return {
     ...base,
+    ...shared,
     kind: initial.kind,
     text: initial.text,
     choices: initial.options,
@@ -133,18 +160,21 @@ export function QuestionEditor({
   number,
   initial,
   initialImageUrl,
+  lastSection,
   onSave,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   examTitle: string;
-  /** Position of the question in the catalog, for the sheet title. */
+  /** Position of the question in the package, for the sheet title. */
   number: number;
   initial: QuestionDraft | null;
   initialImageUrl: string | null;
+  /** The subtes of the package's last question, prefilled for a new one. */
+  lastSection: string;
   onSave: (payload: QuestionSavePayload) => Promise<void>;
 }) {
-  const [work, setWork] = useState<Work>(() => workFrom(null));
+  const [work, setWork] = useState<Work>(() => workFrom(null, ""));
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
@@ -157,11 +187,13 @@ export function QuestionEditor({
 
   useEffect(() => {
     if (!open) return;
-    setWork(workFrom(initial));
+    setWork(workFrom(initial, lastSection));
     setFile(null);
     setPreview(null);
     setRemoveImage(false);
     setErrors({});
+    // lastSection only seeds a new question when the sheet opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial]);
 
   useEffect(() => {
@@ -212,6 +244,8 @@ export function QuestionEditor({
     try {
       await onSave({
         ...valid,
+        section: work.section.trim() || null,
+        explanation: work.explanation.trim(),
         imageBase64: file ? await readAsBase64(file) : null,
         imageName: file ? file.name : null,
         removeImage: removeImage && !file,
@@ -269,6 +303,30 @@ export function QuestionEditor({
           </div>
 
           <div className="space-y-2">
+            <label htmlFor="q-section" className="text-[13px] font-semibold text-muted-foreground">
+              Subtes (opsional)
+            </label>
+            <Input
+              id="q-section"
+              list="q-section-suggestions"
+              value={work.section}
+              onChange={(e) => set({ section: e.target.value })}
+              placeholder="misal: TIU"
+              maxLength={40}
+              aria-describedby="q-section-hint"
+              className="max-w-xs"
+            />
+            <datalist id="q-section-suggestions">
+              {SECTION_SUGGESTIONS.map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+            <p id="q-section-hint" className="text-[13px] text-muted-foreground">
+              Laporan peserta menghitung skor per subtes.
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <label htmlFor="q-text" className="text-[13px] font-semibold text-muted-foreground">
               Pertanyaan
             </label>
@@ -276,7 +334,7 @@ export function QuestionEditor({
               id="q-text"
               value={work.text}
               onChange={(e) => set({ text: e.target.value })}
-              placeholder="misal: Hasil dari 12 + 8 × 2 adalah …"
+              placeholder="misal: 2, 6, 12, 20, 30, … Bilangan berikutnya adalah …"
               rows={4}
               aria-invalid={!!errors.text}
               aria-describedby={errors.text ? undefined : "q-text-hint"}
@@ -374,6 +432,28 @@ export function QuestionEditor({
               {errors.answers}
             </p>
           ) : null}
+
+          <div className="space-y-2">
+            <label
+              htmlFor="q-explanation"
+              className="text-[13px] font-semibold text-muted-foreground"
+            >
+              Pembahasan
+            </label>
+            <Textarea
+              id="q-explanation"
+              value={work.explanation}
+              onChange={(e) => set({ explanation: e.target.value })}
+              placeholder="Kenapa kuncinya benar, dan kenapa pilihan lain keliru."
+              rows={5}
+              maxLength={8000}
+              aria-describedby="q-explanation-hint"
+            />
+            <p id="q-explanation-hint" className="text-[13px] text-muted-foreground">
+              Tampil ke peserta setelah mereka mengirim jawaban, dan ikut tercetak di PDF
+              pembahasan.
+            </p>
+          </div>
         </form>
 
         <div className="border-t border-hairline bg-card px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">

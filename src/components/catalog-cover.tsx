@@ -1,14 +1,11 @@
 import {
-  Atom,
   BookOpenText,
+  Briefcase,
   Calculator,
   Coins,
-  Cpu,
-  FlaskConical,
   Globe2,
   Landmark,
   Languages,
-  Leaf,
   Scale,
   Users,
   type LucideIcon,
@@ -37,34 +34,50 @@ export function coverClass(seed: string): string {
 }
 
 /**
- * SMA subjects get a fixed hue, symbol and photograph, so "Fisika" always
- * looks like Fisika. More specific titles come before the general ones.
+ * Known subtes and selections get a fixed hue, symbol and photograph, so a
+ * TWK package always looks like TWK. The first match wins, so a title naming
+ * a subtes ("SKD · TIU Deret Angka") takes the subtes before the selection.
  */
 const SUBJECTS: { match: RegExp; cover: string; icon: LucideIcon; photo: CoverPhotoKey }[] = [
   {
-    match: /\btka\b.*geografi|geografi.*\btka\b/i,
-    cover: "cover-10",
-    icon: Globe2,
-    photo: "tka-geografi",
+    match: /\btwk\b|wawasan kebangsaan|pancasila|ppkn|kewarganegaraan/i,
+    cover: "cover-4",
+    icon: Scale,
+    photo: "gedung-pancasila",
   },
-  { match: /geografi/i, cover: "cover-10", icon: Globe2, photo: "geografi" },
-  { match: /matematika dasar/i, cover: "cover-0", icon: Calculator, photo: "matematika-dasar" },
-  { match: /matemat/i, cover: "cover-0", icon: Calculator, photo: "matematika" },
-  { match: /fisika/i, cover: "cover-1", icon: Atom, photo: "fisika" },
-  { match: /kimia/i, cover: "cover-5", icon: FlaskConical, photo: "kimia" },
-  { match: /biologi/i, cover: "cover-6", icon: Leaf, photo: "biologi" },
-  { match: /bahasa indonesia/i, cover: "cover-11", icon: BookOpenText, photo: "bahasa-indonesia" },
   {
-    match: /bahasa inggris|english/i,
+    match: /\btiu\b|intelegensi|numerik|deret|logika|matemat/i,
+    cover: "cover-0",
+    icon: Calculator,
+    photo: "papan-rumus",
+  },
+  {
+    match: /\btkp\b|karakteristik pribadi|psikotes|akhlak|core values?/i,
+    cover: "cover-3",
+    icon: Users,
+    photo: "yogyakarta",
+  },
+  {
+    match: /bahasa inggris|english|toefl|toeic|ielts/i,
     cover: "cover-2",
     icon: Languages,
-    photo: "bahasa-inggris",
+    photo: "tower-bridge",
   },
-  { match: /sejarah/i, cover: "cover-9", icon: Landmark, photo: "sejarah" },
-  { match: /ekonomi/i, cover: "cover-8", icon: Coins, photo: "ekonomi" },
-  { match: /sosiologi/i, cover: "cover-3", icon: Users, photo: "sosiologi" },
-  { match: /pancasila|ppkn|kewarganegaraan/i, cover: "cover-4", icon: Scale, photo: "pancasila" },
-  { match: /informatika|komputer|tik\b/i, cover: "cover-7", icon: Cpu, photo: "informatika" },
+  { match: /verbal|bahasa indonesia/i, cover: "cover-11", icon: BookOpenText, photo: "rak-buku" },
+  { match: /\bodp\b|perbankan|\bbank\b/i, cover: "cover-8", icon: Coins, photo: "abakus" },
+  {
+    match: /\bbumn\b|\btkd\b|kemampuan dasar|ekonomi/i,
+    cover: "cover-5",
+    icon: Briefcase,
+    photo: "pasar-terapung",
+  },
+  {
+    match: /\bskd\b|\bcpns\b|\basn\b|kompetensi dasar|sejarah/i,
+    cover: "cover-9",
+    icon: Landmark,
+    photo: "borobudur",
+  },
+  { match: /geografi/i, cover: "cover-10", icon: Globe2, photo: "bromo" },
 ];
 
 export function subjectOf(title: string) {
@@ -81,10 +94,22 @@ export function catalogCoverClass(id: string, title: string): string {
   return subjectOf(title)?.cover ?? coverClass(id);
 }
 
-/** First letter of the most meaningful word: "Try Out Matematika Dasar" -> "M". */
+/** First letter of the most meaningful word: "Paket Harian Psikologi" -> "P". */
 export function monogram(title: string): string {
-  const skip = new Set(["try", "out", "tryout", "ujian", "tes", "test", "latihan", "simulasi"]);
-  const words = title.split(/\s+/).filter(Boolean);
+  const skip = new Set([
+    "try",
+    "out",
+    "tryout",
+    "ujian",
+    "tes",
+    "test",
+    "latihan",
+    "simulasi",
+    "paket",
+    "harian",
+    "soal",
+  ]);
+  const words = title.split(/\s+/).filter((w) => /^\p{L}/u.test(w));
   const word = words.find((w) => !skip.has(w.toLowerCase())) ?? words[0] ?? "?";
   return word[0]?.toUpperCase() ?? "?";
 }

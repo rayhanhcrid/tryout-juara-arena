@@ -76,17 +76,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#f5f5f7" },
-      { title: "TryOutKu — Try Out Ujian Online" },
+      { title: "lulustes — Latihan Harian Tes CPNS, BUMN & ODP" },
       {
         name: "description",
         content:
-          "Platform try out ujian online dengan katalog ujian, timer, skor otomatis, dan leaderboard.",
+          "Satu paket soal setiap hari untuk persiapan tes CPNS, BUMN, dan ODP, lengkap dengan pembahasan, laporan, dan peringkat.",
       },
-      { name: "author", content: "TryOutKu" },
-      { property: "og:title", content: "TryOutKu — Try Out Ujian Online" },
+      { name: "author", content: "lulustes" },
+      { property: "og:title", content: "lulustes — Latihan Harian Tes CPNS, BUMN & ODP" },
       {
         property: "og:description",
-        content: "Ikuti try out, lihat skormu, dan bersaing di leaderboard.",
+        content: "Kerjakan paket hari ini, baca pembahasannya, dan jaga hari beruntunmu.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

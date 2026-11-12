@@ -8,48 +8,55 @@ web
 
 ## Users
 
-- **Peserta (user):** terutama siswa SMA (katalog contoh berisi mata pelajaran SMA), tetapi katalog bebas untuk jenjang apa pun. Peserta tidak membuat akun. Mereka membuka TryOutKu untuk berlatih soal pilihan ganda dalam kondisi mirip ujian sungguhan (waktu terbatas), lalu melihat skor dan posisinya dibanding peserta lain. Bisa dari laptop maupun ponsel.
-- **Admin:** pengelola konten yang menyusun katalog ujian beserta soalnya (termasuk gambar soal), mengatur durasi, dan merapikan isi katalog.
+- **Peserta (user):** pencari kerja yang bersiap menghadapi tes seleksi CPNS (SKD: TWK, TIU, TKP), rekrutmen BUMN (TKD, AKHLAK, bahasa Inggris), dan program ODP perbankan (TPA, psikotes, bahasa Inggris). Kebanyakan lulusan baru atau pekerja muda yang belajar di sela kesibukan, sering dari ponsel. Peserta tidak membuat akun.
+- **Admin:** pengelola konten yang menerbitkan satu paket soal setiap hari, menulis pembahasan tiap soal, menyusun paket latihan per jalur, dan memuat berita seleksi.
 
 ## Product Purpose
 
-Platform try out ujian online: peserta memilih katalog ujian, mengerjakan soal pilihan ganda dengan timer, mengirim jawaban, langsung melihat skor akhir, dan hasil terbaiknya masuk leaderboard katalog tersebut. Sukses = peserta menyelesaikan try out tanpa hambatan, memahami skornya, dan termotivasi kembali untuk memperbaiki peringkat.
+lulustes membantu peserta membangun rutinitas persiapan tes: setiap hari terbit satu paket soal. Peserta mengerjakannya dengan timer, langsung melihat skor dan posisinya di papan peringkat, lalu membaca mana yang benar, mana yang salah, dan pembahasan tiap soal; laporan dan pembahasannya bisa disimpan sebagai PDF. Hari beruntun menghitung berapa hari berturut-turut paket dikirim di harinya. Sukses = peserta kembali besok.
 
 ## Positioning
 
-Try out yang terasa seperti ujian sungguhan tetapi tanpa gesekan: tanpa akun, cukup tulis nama sebelum mulai, timer ketat dengan kirim otomatis, jawaban tahan refresh, skor dinilai di server, dan peringkat langsung terlihat per katalog.
+Satu paket soal sehari, sampai lulus tes. USP-nya rutinitas: paket harian yang ringan, hari beruntun yang dijaga, dan pembahasan yang langsung terbuka setelah mengirim. Tetap tanpa gesekan: tanpa akun, cukup tulis nama, timer ketat dengan kirim otomatis, jawaban tahan refresh, skor dinilai di server.
 
 ## Operating Context
 
-- Alur peserta (tanpa akun): beranda → katalog (`/katalog`) → pilih mata pelajaran → tulis nama di layar persiapan → mengerjakan (timer berjalan, navigasi antar soal) → kirim (manual atau otomatis saat waktu habis) → hasil & leaderboard → bisa mengerjakan ulang.
-- Alur admin: buka `/admin` → masukkan kata sandi admin (pemilik memilih "Rayhan123"; disimpan sebagai hash SHA-256, secret `ADMIN_ACCESS_CODE` juga diterima; token HMAC 12 jam) → kelola katalog → kelola soal per katalog. Tombol "Isi katalog contoh SMA" menambahkan 12 mata pelajaran contoh.
-- Bahasa antarmuka: Bahasa Indonesia, nada santai-sopan ("kamu").
+- Alur peserta (tanpa akun): beranda → **Hari ini** (`/hari-ini`, rumah rutinitas) → paket hari ini → tulis nama → mengerjakan → kirim (manual atau otomatis saat waktu habis) → layar skor (`/hasil/$examId`) → **Pembahasan** (`/pembahasan/$attemptId`: benar/salah tiap soal, kunci, pembahasan, laporan per subtes, Unduh PDF) → besok kembali ke Hari ini.
+- Menu peserta: Hari ini · Latihan (`/katalog`: semua paket terbuka, termasuk paket harian yang terlewat, disaring per jalur `?jalur=cpns|bumn|odp`) · Berita (`/berita`). Di ponsel menjadi tab bar bawah.
+- Alur admin: `/admin` → kata sandi admin (pemilik memilih "Rayhan123"; disimpan sebagai hash SHA-256, secret `ADMIN_ACCESS_CODE` juga diterima; token HMAC 12 jam) → tampilan **Paket soal** (buat paket, pilih jalur, jadwalkan sebagai paket harian bertanggal, tulis soal + subtes + pembahasan) atau **Berita** (judul, ringkasan, tautan sumber resmi, jalur, tanggal).
+- Bahasa antarmuka: Bahasa Indonesia, nada santai-sopan ("kamu"). Kosakata: paket (bukan katalog), paket harian / paket hari ini, Latihan, hari beruntun, pembahasan, laporan, jalur, subtes.
 
 ## Capabilities and Constraints
 
-- Stack: TanStack Start + React 19, Tailwind CSS v4, komponen shadcn/Radix, Supabase (auth, Postgres, storage bucket privat `exam-images`). Proyek tersambung ke Lovable; branch `main` harus selalu dalam kondisi berjalan.
-- Tanpa akun peserta: pengiriman pertama membuat profil "tamu" di server (service role) dengan nama yang ditulis; browser menyimpan token HMAC tamu. Nama yang sama di browser yang sama = peserta yang sama; nama berbeda = peserta baru (lab sekolah). Semua baca/tulis peserta lewat server function publik; kunci jawaban tidak pernah dikirim ke browser.
-- Rute lama `/auth` dan `/dashboard` dialihkan ke `/katalog`.
-- Soal: pilihan ganda 4 opsi (A–D), satu kunci, gambar opsional (maks 5MB, png/jpg/webp/gif).
-- Penilaian di server (`submitGuestAttempt`). Tidak ada peringkat keseluruhan: tiap katalog punya papannya sendiri (`/peringkat/$examId`, tombol "Peringkat" di kartu katalog); leaderboard = percobaan terbaik per peserta, seri dipecah oleh waktu kirim lebih awal.
-- Peserta boleh mengerjakan ulang tanpa batas; semua percobaan tersimpan.
-- Belum ada: pembahasan/penjelasan jawaban, kategori katalog, foto profil.
+- Stack: TanStack Start + React 19, Tailwind CSS v4, komponen shadcn/Radix, Supabase (Postgres, storage bucket privat `exam-images`). Proyek tersambung ke Lovable; branch `main` harus selalu dalam kondisi berjalan. Perubahan database ada di `drizzle/migrations` (terbaru `0006_lulustes_daily.sql`) dan diterapkan lewat Lovable.
+- Tanpa akun peserta: pengiriman pertama membuat "tamu" di database dengan nama yang ditulis; browser menyimpan id dan kunci rahasia tamu. Nama yang sama di browser yang sama = peserta yang sama. Semua baca/tulis peserta lewat fungsi database `security definer` yang bisa dipanggil dengan kunci publik.
+- Paket harian: `exams.daily_date` (tanggal WIB, satu tanggal satu paket). Paket bertanggal di masa depan tersembunyi dan tidak bisa dikirim sampai harinya. Setelah lewat, paket tetap ada di Latihan.
+- Hari beruntun: jumlah hari paket berturut-turut yang paketnya dikirim pada hari itu juga (WIB). Hari tanpa paket tidak memutusnya; paket hari ini yang belum dikirim belum memutusnya.
+- Jalur: `exams.track` dan `news.track` ∈ cpns, bumn, odp, umum.
+- Soal: pilihan ganda (2–6 opsi, SKD memakai 5), pilihan ganda kompleks, dan kategori (Benar/Salah dsb.), gambar opsional (maks 5MB), subtes opsional (`questions.section`), pembahasan (`questions.explanation`).
+- Penilaian di database (`submit_attempt`). Kunci dan pembahasan hanya dikirim untuk percobaan milik tamu itu sendiri (`get_attempt_review`). Karena kunci terbuka setelah mengirim, **papan peringkat memakai percobaan pertama** tiap peserta; seri dipecah oleh waktu kirim lebih awal. Mengerjakan ulang boleh tanpa batas untuk latihan, tidak mengubah peringkat.
+- Unduh PDF = halaman pembahasan dengan stylesheet cetak; tombolnya membuka dialog cetak browser ("Simpan sebagai PDF") dengan nama file `lulustes-pembahasan-<paket>-<tanggal>`.
+- Berita dikurasi admin dan selalu menautkan sumber aslinya; lulustes tidak menulis ulang pengumuman.
+- Belum ada: penilaian TKP berbobot 1–5 (TKP saat ini dinilai benar/salah seperti soal lain), nilai ambang batas SKD, pengingat harian (notifikasi), foto profil.
 
 ## Brand Commitments
 
-- Nama: **TryOutKu**.
-- Arah visual dipatok pemilik: gaya Apple, seimersif mungkin, **campuran**: beranda dan momen besar (hasil skor) gelap sinematik; halaman kerja (katalog, ujian, admin, peringkat) terang dan bersih.
+- Nama: **lulustes** (huruf kecil semua).
+- Arah visual dipatok pemilik: gaya Apple, seimersif mungkin, **campuran**: beranda dan momen besar (hasil skor) gelap sinematik; halaman kerja (Hari ini, Latihan, Berita, ujian, pembahasan, admin, peringkat) terang dan bersih.
 - Beranda menampilkan perangkat (laptop, tablet, ponsel) berisi aplikasi, dan langkah-langkah sebagai galeri geser ala apple.com.
 
 ## Evidence on Hand
 
-- Ilustrasi `src/assets/hero.png` (siswa mengerjakan ujian; gaya flat krem/navy — warisan tampilan lama).
-- Katalog contoh: "Try Out Matematika Dasar" (seed awal) dan 12 mata pelajaran SMA di `src/lib/sma-catalog.ts` (5 soal tiap mapel; sudah dimasukkan ke database pada 23 Okt 2026, tombol admin "Isi katalog contoh SMA" bisa mengisinya ulang).
-- Tidak ada testimoni, jumlah pengguna, mitra, atau statistik nyata — jangan dikarang.
+- Paket contoh "Paket Harian SKD #1" (12 soal orisinal: 5 TWK, 7 TIU, lengkap dengan pembahasan) ditanam oleh migration 0006 untuk tanggal migration dijalankan.
+- Katalog contoh SMA lama dan TKA Geografi dihapus oleh migration 0006 atas permintaan pemilik (12 Nov 2026).
+- Foto sampul dari Wikimedia Commons (Gedung Pancasila, Borobudur, Raja Ampat, Bromo, dll.) dipetakan ke subtes; kreditnya di halaman Latihan.
+- Section beranda "Kenapa harus tiap hari?" memakai tiga sumber yang sudah dicek ke paper atau ringkasan resminya (12 Nov 2026): Lally dkk. 2010 (96 relawan, 84 hari, median 66 hari sampai 95% puncak otomatisitas pada 39 peserta yang kurvanya terukur, rentang 18–254, satu kali terlewat tidak berpengaruh berarti); Roediger & Karpicke 2006 (Eksp. 1, 120 mahasiswa: baca ulang vs diuji 81/75% setelah 5 menit, 54/68% setelah 2 hari, 42/56% setelah 1 minggu; Eksp. 2: STTT 61% vs SSSS 40% setelah seminggu, membaca 3,4 vs 14,2 kali); Dunlosky dkk. 2013 (latihan soal dan latihan berjarak bermanfaat tinggi; membaca ulang dan menstabilo rendah). Angka baru di section itu harus dari sumber yang dicek, bukan ingatan.
+- Tidak ada testimoni, jumlah pengguna, mitra, berita, atau statistik nyata tentang lulustes — jangan dikarang. Berita hanya yang dimuat admin dari sumber resmi.
 
 ## Product Principles
 
-1. Ujian adalah momen fokus: saat mengerjakan, hanya soal, pilihan, dan waktu yang penting.
-2. Skor harus jujur dan langsung: dinilai server, tampil seketika, posisi di leaderboard jelas.
-3. Tanpa gesekan: tanpa akun, cukup nama; jawaban tidak hilang; waktu habis tetap terkirim.
-4. Admin bekerja cepat: membuat, mengedit, dan merapikan soal tanpa keluar dari satu layar kerja.
+1. Rutinitas di atas segalanya: paket hari ini selalu satu ketukan dari mana pun, dan hari beruntun terlihat tanpa dicari.
+2. Ujian adalah momen fokus: saat mengerjakan, hanya soal, pilihan, dan waktu yang penting.
+3. Skor jujur, pembahasan langsung: dinilai server, tampil seketika, lalu setiap kesalahan dijelaskan.
+4. Tanpa gesekan: tanpa akun, cukup nama; jawaban tidak hilang; waktu habis tetap terkirim.
+5. Admin bekerja cepat: menerbitkan paket harian, menulis soal dan pembahasan, dan memuat berita tanpa keluar dari satu layar kerja.

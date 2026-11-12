@@ -1,10 +1,11 @@
-# Tryout Juara Arena
+# lulustes
 
-aku mau bikin webapps gitu yang fungsinya tuh kaya buat try out ujian gitu loh, jadi ada role ini
+Latihan harian untuk tes CPNS, BUMN, dan ODP. Setiap hari terbit satu paket soal; peserta mengerjakannya dengan timer, melihat skor dan posisinya di papan peringkat, lalu membaca mana yang benar, mana yang salah, dan pembahasan tiap soal (bisa disimpan sebagai PDF). Hari beruntun menghitung berapa hari berturut-turut paket dikirim di harinya.
 
-user : dia tuh nanti di awal masuk bisa pilih mata katalog ujian yang mau dia ikutin, nah pas dia masuk ada deh soal-soalnya yang harus dia isi, nanti di waktu juga (waktunya bisa diatur) terus dia submit, dan keliatan deh skor akhirnya berapa dan nanti hasilnya dia tuh akan ada di leaderboard gitu
+- **Peserta** (tanpa akun, cukup nama): Hari ini (`/hari-ini`), Latihan (`/katalog`, semua paket per jalur), Berita (`/berita`), layar skor (`/hasil/$examId`), pembahasan + laporan (`/pembahasan/$attemptId`), peringkat per paket (`/peringkat/$examId`).
+- **Admin** (`/admin`): kelola paket soal (jalur, jadwal paket harian, soal, subtes, pembahasan, gambar) dan berita seleksi.
 
-admin : dia bisa bikin katalog ujian (beserta soal-soalnya gitu), dan di soalnya bisa dipakein gambar yaa..
+Detail produk ada di [PRODUCT.md](PRODUCT.md), sistem desain di [DESIGN.md](DESIGN.md). Perubahan database ada di `drizzle/migrations` (terbaru `0006_lulustes_daily.sql`).
 
 This project was built with [Lovable](https://lovable.dev).
 

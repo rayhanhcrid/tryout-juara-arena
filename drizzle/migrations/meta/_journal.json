@@ -43,6 +43,13 @@
       "when": 1792823272875,
       "tag": "0005_tka_geografi_forms",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794445446650,
+      "tag": "0006_lulustes_daily",
+      "breakpoints": true
     }
   ]
 }

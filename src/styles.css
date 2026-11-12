@@ -58,6 +58,7 @@
   --color-hairline: var(--hairline);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-chart-muted: var(--chart-muted);
 
   --font-sans: var(--font-text);
   --font-display: var(--font-display-stack);
@@ -127,6 +128,8 @@
   --bar-bg: rgb(251 251 253 / 0.78);
   --bezel: #0b0b0c;
   --bezel-edge: rgb(0 0 0 / 0.06);
+  /* De-emphasis series in charts: the comparison, beside the one blue series. */
+  --chart-muted: #8e8e93;
 }
 
 /*
@@ -174,6 +177,7 @@
   --bar-bg: rgb(22 22 23 / 0.8);
   --bezel: #1d1d1f;
   --bezel-edge: rgb(255 255 255 / 0.14);
+  --chart-muted: #8e8e93;
 }
 
 /* Each theme island resolves its own ink instead of inheriting the outer one. */
@@ -732,5 +736,23 @@ html:has(.page-dark) body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Print: a review saved as a PDF ---------- */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 14mm 16mm;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+  }
+  body {
+    /* Keep the green, red and gray answer marks on paper. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

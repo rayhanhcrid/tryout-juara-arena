@@ -2,17 +2,18 @@ import { Link } from "@tanstack/react-router";
 import {
   ArrowDown,
   ArrowUp,
+  CalendarDays,
   Check,
   ChevronLeft,
   ChevronRight,
   Clock,
   ExternalLink,
   FileText,
-  ListPlus,
   Lock,
   Pencil,
   Pin,
   Plus,
+  Route,
   Search,
   Trash2,
   Users,
@@ -20,11 +21,13 @@ import {
 import { useMemo, useState } from "react";
 import { BrandLink } from "@/components/brand";
 import { CatalogCover, CoverMark, catalogCoverClass } from "@/components/catalog-cover";
+import { SegmentedControl } from "@/components/segmented-control";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDuration } from "@/lib/format";
+import { formatDay, formatDuration } from "@/lib/format";
 import { splitQuestionText } from "@/lib/question-format";
 import { LETTERS, kindLabel, type AnswerKey, type QuestionKind } from "@/lib/question-kinds";
+import { trackLabel, type Track } from "@/lib/tracks";
 import { cn } from "@/lib/utils";
 
 export type WorkspaceExam = {
@@ -33,6 +36,8 @@ export type WorkspaceExam = {
   description: string;
   duration_minutes: number;
   featured: boolean;
+  track: Track;
+  daily_date: string | null;
   questionCount: number;
   attemptCount: number;
 };
@@ -45,12 +50,20 @@ export type WorkspaceQuestion = {
   options: string[];
   categories: string[] | null;
   answer: AnswerKey;
+  section: string | null;
+  explanation: string;
 };
+
+export type WorkspaceView = "paket" | "berita";
+
+const VIEW_OPTIONS = [
+  { value: "paket", label: "Paket soal" },
+  { value: "berita", label: "Berita" },
+] as const;
 
 export type WorkspaceActions = {
   onSelect: (id: string | null) => void;
   onNewExam: () => void;
-  onSeed: () => void;
   onEditExam: () => void;
   onDeleteExam: () => void;
   onNewQuestion: () => void;
@@ -61,8 +74,10 @@ export type WorkspaceActions = {
 };
 
 export function AdminWorkspace({
+  view,
+  onViewChange,
+  news,
   exams,
-  seeding,
   loadingExams,
   selectedId,
   questions,
@@ -70,9 +85,11 @@ export function AdminWorkspace({
   busyQuestionId,
   actions,
 }: {
+  view: WorkspaceView;
+  onViewChange: (view: WorkspaceView) => void;
+  /** The Berita view, rendered in place of the packages. */
+  news: React.ReactNode;
   exams: WorkspaceExam[];
-  /** True while the SMA demo catalogs are being inserted. */
-  seeding: boolean;
   loadingExams: boolean;
   selectedId: string | null;
   questions: WorkspaceQuestion[];
@@ -86,9 +103,18 @@ export function AdminWorkspace({
     <div className="min-h-screen bg-background">
       <header className="material-bar sticky top-0 z-40 border-b border-hairline">
         <div className="mx-auto flex h-[52px] max-w-7xl items-center gap-3 px-4 sm:px-6">
-          <BrandLink to="/" iconSize={24} />
-          <span aria-hidden className="h-5 w-px bg-border" />
-          <span className="text-[15px] font-medium text-muted-foreground">Admin</span>
+          <BrandLink to="/" iconSize={24} className="[&>span]:hidden sm:[&>span]:inline" />
+          <span aria-hidden className="hidden h-5 w-px bg-border sm:block" />
+          <span className="hidden text-[15px] font-medium text-muted-foreground sm:inline">
+            Admin
+          </span>
+          <SegmentedControl
+            value={view}
+            onChange={onViewChange}
+            options={VIEW_OPTIONS}
+            ariaLabel="Yang dikelola"
+            className="ml-1 w-52 sm:ml-4"
+          />
           <div className="ml-auto flex items-center gap-1">
             <Link
               to="/"
@@ -103,54 +129,64 @@ export function AdminWorkspace({
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:grid lg:grid-cols-[21rem_minmax(0,1fr)] lg:gap-10 lg:py-10">
-        <aside className={cn(selected ? "hidden lg:block" : "block")}>
-          <ExamSidebar
-            exams={exams}
-            loading={loadingExams}
-            seeding={seeding}
-            selectedId={selectedId}
-            actions={actions}
-          />
-        </aside>
-        <section className={cn(selected ? "block" : "hidden lg:block")}>
-          {selected ? (
-            <ExamDetail
-              exam={selected}
-              questions={questions}
-              loading={loadingQuestions}
-              busyQuestionId={busyQuestionId}
+      {view === "berita" ? (
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-10">{news}</div>
+      ) : (
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:grid lg:grid-cols-[21rem_minmax(0,1fr)] lg:gap-10 lg:py-10">
+          <aside className={cn(selected ? "hidden lg:block" : "block")}>
+            <ExamSidebar
+              exams={exams}
+              loading={loadingExams}
+              selectedId={selectedId}
               actions={actions}
             />
-          ) : (
-            <div className="hidden h-[60vh] flex-col items-center justify-center text-center lg:flex">
-              <FileText className="h-9 w-9 text-tertiary" />
-              <p className="type-title-3 mt-4">
-                {exams.length === 0 && !loadingExams ? "Belum ada katalog" : "Pilih katalog"}
-              </p>
-              <p className="type-callout mt-1 text-muted-foreground">
-                {exams.length === 0 && !loadingExams
-                  ? "Buat katalog pertama, lalu tambahkan soalnya."
-                  : "Soal-soalnya akan tampil di sini."}
-              </p>
-            </div>
-          )}
-        </section>
-      </div>
+          </aside>
+          <section className={cn(selected ? "block" : "hidden lg:block")}>
+            {selected ? (
+              <ExamDetail
+                exam={selected}
+                questions={questions}
+                loading={loadingQuestions}
+                busyQuestionId={busyQuestionId}
+                actions={actions}
+              />
+            ) : (
+              <div className="hidden h-[60vh] flex-col items-center justify-center text-center lg:flex">
+                <FileText className="h-9 w-9 text-tertiary" />
+                <p className="type-title-3 mt-4">
+                  {exams.length === 0 && !loadingExams ? "Belum ada paket" : "Pilih paket"}
+                </p>
+                <p className="type-callout mt-1 text-muted-foreground">
+                  {exams.length === 0 && !loadingExams
+                    ? "Buat paket pertama, lalu tambahkan soalnya."
+                    : "Soal-soalnya akan tampil di sini."}
+                </p>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
+}
+
+/** "Harian · 12 Nov · CPNS", or just the jalur for a regular package. */
+function examTags(exam: WorkspaceExam): string {
+  const parts = [
+    exam.daily_date ? `Harian ${formatDay(exam.daily_date, "short")}` : null,
+    trackLabel(exam.track),
+  ];
+  return parts.filter(Boolean).join(" · ");
 }
 
 function ExamSidebar({
   exams,
   loading,
-  seeding,
   selectedId,
   actions,
 }: {
   exams: WorkspaceExam[];
   loading: boolean;
-  seeding: boolean;
   selectedId: string | null;
   actions: WorkspaceActions;
 }) {
@@ -164,18 +200,18 @@ function ExamSidebar({
   return (
     <div className="lg:sticky lg:top-[92px]">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="type-title-2">Katalog</h1>
+        <h1 className="type-title-2">Paket soal</h1>
         <Button size="sm" onClick={actions.onNewExam}>
           <Plus /> Baru
         </Button>
       </div>
       <p className="tabular mt-1 text-[13px] text-muted-foreground">
-        {exams.length} katalog · {totalQuestions} soal
+        {exams.length} paket · {totalQuestions} soal
       </p>
 
       {exams.length > 5 ? (
         <label className="relative mt-4 block">
-          <span className="sr-only">Cari katalog</span>
+          <span className="sr-only">Cari paket</span>
           <Search
             aria-hidden
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -184,7 +220,7 @@ function ExamSidebar({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari katalog"
+            placeholder="Cari paket"
             className="h-9 w-full rounded-xl bg-fill pl-9 pr-3 text-[15px] outline-none placeholder:text-muted-foreground focus-visible:shadow-[0_0_0_4px_var(--color-ring)]"
           />
         </label>
@@ -199,19 +235,14 @@ function ExamSidebar({
           </div>
         ) : exams.length === 0 ? (
           <div className="rounded-2xl bg-card px-5 py-10 text-center shadow-[var(--shadow-card)]">
-            <p className="type-headline">Belum ada katalog</p>
+            <p className="type-headline">Belum ada paket</p>
             <p className="type-callout mt-1 text-muted-foreground">
-              Buat katalog sendiri, atau isi dulu dengan 12 mata pelajaran SMA beserta soal
-              contohnya.
+              Buat paket pertama, misalnya paket harian SKD untuk hari ini, lalu tambahkan soal dan
+              pembahasannya.
             </p>
-            <div className="mt-5 flex flex-col items-center gap-2">
-              <Button onClick={actions.onSeed} disabled={seeding}>
-                <ListPlus /> {seeding ? "Mengisi…" : "Isi katalog contoh SMA"}
-              </Button>
-              <Button variant="ghost" onClick={actions.onNewExam}>
-                <Plus /> Buat katalog kosong
-              </Button>
-            </div>
+            <Button className="mt-5" onClick={actions.onNewExam}>
+              <Plus /> Buat paket
+            </Button>
           </div>
         ) : (
           <ul className="overflow-hidden rounded-2xl bg-card p-1.5 shadow-[var(--shadow-card)]">
@@ -256,8 +287,7 @@ function ExamSidebar({
                           active ? "text-primary-foreground/80" : "text-muted-foreground",
                         )}
                       >
-                        {exam.questionCount} soal · {exam.duration_minutes} mnt ·{" "}
-                        {exam.attemptCount} percobaan
+                        {examTags(exam)} · {exam.questionCount} soal · {exam.attemptCount} percobaan
                       </span>
                     </span>
                     <ChevronRight
@@ -278,17 +308,6 @@ function ExamSidebar({
             ) : null}
           </ul>
         )}
-        {!loading && exams.length > 0 ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-3 text-muted-foreground"
-            onClick={actions.onSeed}
-            disabled={seeding}
-          >
-            <ListPlus /> {seeding ? "Mengisi katalog contoh…" : "Tambahkan katalog contoh SMA"}
-          </Button>
-        ) : null}
       </div>
     </div>
   );
@@ -323,7 +342,7 @@ function ExamDetail({
         onClick={() => actions.onSelect(null)}
         className="mb-4 inline-flex cursor-pointer items-center gap-0.5 text-[15px] text-link hover:underline lg:hidden"
       >
-        <ChevronLeft className="h-4 w-4" /> Katalog
+        <ChevronLeft className="h-4 w-4" /> Paket soal
       </button>
 
       <div className="overflow-hidden rounded-[28px] bg-card shadow-[var(--shadow-card)]">
@@ -339,13 +358,19 @@ function ExamDetail({
             <p className="type-callout text-tertiary">Belum ada deskripsi.</p>
           )}
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+            {exam.daily_date ? (
+              <MetaItem icon={CalendarDays}>
+                Paket harian {formatDay(exam.daily_date, "long")}
+              </MetaItem>
+            ) : null}
+            <MetaItem icon={Route}>{trackLabel(exam.track)}</MetaItem>
             <MetaItem icon={Clock}>{formatDuration(exam.duration_minutes)}</MetaItem>
             <MetaItem icon={FileText}>{exam.questionCount} soal</MetaItem>
             <MetaItem icon={Users}>{exam.attemptCount} percobaan</MetaItem>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button variant="secondary" size="sm" onClick={actions.onEditExam}>
-              <Pencil /> Edit katalog
+              <Pencil /> Edit paket
             </Button>
             <Button
               variant="ghost"
@@ -382,7 +407,7 @@ function ExamDetail({
           <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-border px-6 py-14 text-center">
             <p className="type-headline">Belum ada soal</p>
             <p className="type-callout mt-1 max-w-sm text-muted-foreground">
-              Peserta baru bisa mengerjakan katalog ini setelah ada minimal satu soal.
+              Peserta baru bisa mengerjakan paket ini setelah ada minimal satu soal.
             </p>
             <Button className="mt-5" onClick={actions.onNewQuestion}>
               <Plus /> Tambah soal pertama
@@ -545,12 +570,23 @@ function QuestionCard({
             />
           ) : null}
           <p className="mt-3 text-[12px] font-medium text-muted-foreground">
+            {question.section ? `${question.section} · ` : ""}
             {kindLabel(question.kind)}
             {question.kind === "category" && question.categories
               ? ` · ${question.categories.join(" / ")}`
               : ""}
           </p>
           <QuestionKeyPreview question={question} />
+          {question.explanation ? (
+            <p className="mt-3 line-clamp-2 rounded-xl bg-background px-3 py-2 text-[13px] leading-[1.45] text-muted-foreground">
+              <span className="font-semibold text-foreground">Pembahasan: </span>
+              {question.explanation}
+            </p>
+          ) : (
+            <p className="mt-3 text-[13px] font-medium text-warning-ink">
+              Belum ada pembahasan. Peserta hanya akan melihat kuncinya.
+            </p>
+          )}
         </div>
         <div className="-mr-1 flex shrink-0 flex-col gap-0.5">
           <IconAction

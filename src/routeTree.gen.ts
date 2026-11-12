@@ -12,10 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BeritaRouteImport } from './routes/berita'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as HariIniRouteImport } from './routes/hari-ini'
 import { Route as KatalogRouteImport } from './routes/katalog'
 import { Route as PeringkatRouteImport } from './routes/peringkat'
 import { Route as HasilExamIdRouteImport } from './routes/hasil.$examId'
+import { Route as PembahasanAttemptIdRouteImport } from './routes/pembahasan.$attemptId'
 import { Route as PeringkatIndexRouteImport } from './routes/peringkat.index'
 import { Route as PeringkatExamIdRouteImport } from './routes/peringkat.$examId'
 import { Route as UjianExamIdRouteImport } from './routes/ujian.$examId'
@@ -35,9 +38,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BeritaRoute = BeritaRouteImport.update({
+  id: '/berita',
+  path: '/berita',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HariIniRoute = HariIniRouteImport.update({
+  id: '/hari-ini',
+  path: '/hari-ini',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KatalogRoute = KatalogRouteImport.update({
@@ -53,6 +66,11 @@ const PeringkatRoute = PeringkatRouteImport.update({
 const HasilExamIdRoute = HasilExamIdRouteImport.update({
   id: '/hasil/$examId',
   path: '/hasil/$examId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PembahasanAttemptIdRoute = PembahasanAttemptIdRouteImport.update({
+  id: '/pembahasan/$attemptId',
+  path: '/pembahasan/$attemptId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PeringkatIndexRoute = PeringkatIndexRouteImport.update({
@@ -75,10 +93,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/berita': typeof BeritaRoute
   '/dashboard': typeof DashboardRoute
+  '/hari-ini': typeof HariIniRoute
   '/katalog': typeof KatalogRoute
   '/peringkat': typeof PeringkatRouteWithChildren
   '/hasil/$examId': typeof HasilExamIdRoute
+  '/pembahasan/$attemptId': typeof PembahasanAttemptIdRoute
   '/peringkat/$examId': typeof PeringkatExamIdRoute
   '/ujian/$examId': typeof UjianExamIdRoute
   '/peringkat/': typeof PeringkatIndexRoute
@@ -87,9 +108,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/berita': typeof BeritaRoute
   '/dashboard': typeof DashboardRoute
+  '/hari-ini': typeof HariIniRoute
   '/katalog': typeof KatalogRoute
   '/hasil/$examId': typeof HasilExamIdRoute
+  '/pembahasan/$attemptId': typeof PembahasanAttemptIdRoute
   '/peringkat/$examId': typeof PeringkatExamIdRoute
   '/ujian/$examId': typeof UjianExamIdRoute
   '/peringkat': typeof PeringkatIndexRoute
@@ -99,10 +123,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/berita': typeof BeritaRoute
   '/dashboard': typeof DashboardRoute
+  '/hari-ini': typeof HariIniRoute
   '/katalog': typeof KatalogRoute
   '/peringkat': typeof PeringkatRouteWithChildren
   '/hasil/$examId': typeof HasilExamIdRoute
+  '/pembahasan/$attemptId': typeof PembahasanAttemptIdRoute
   '/peringkat/$examId': typeof PeringkatExamIdRoute
   '/ujian/$examId': typeof UjianExamIdRoute
   '/peringkat/': typeof PeringkatIndexRoute
@@ -113,10 +140,13 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/berita'
     | '/dashboard'
+    | '/hari-ini'
     | '/katalog'
     | '/peringkat'
     | '/hasil/$examId'
+    | '/pembahasan/$attemptId'
     | '/peringkat/$examId'
     | '/ujian/$examId'
     | '/peringkat/'
@@ -125,9 +155,12 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/berita'
     | '/dashboard'
+    | '/hari-ini'
     | '/katalog'
     | '/hasil/$examId'
+    | '/pembahasan/$attemptId'
     | '/peringkat/$examId'
     | '/ujian/$examId'
     | '/peringkat'
@@ -136,10 +169,13 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/berita'
     | '/dashboard'
+    | '/hari-ini'
     | '/katalog'
     | '/peringkat'
     | '/hasil/$examId'
+    | '/pembahasan/$attemptId'
     | '/peringkat/$examId'
     | '/ujian/$examId'
     | '/peringkat/'
@@ -149,10 +185,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  BeritaRoute: typeof BeritaRoute
   DashboardRoute: typeof DashboardRoute
+  HariIniRoute: typeof HariIniRoute
   KatalogRoute: typeof KatalogRoute
   PeringkatRoute: typeof PeringkatRouteWithChildren
   HasilExamIdRoute: typeof HasilExamIdRoute
+  PembahasanAttemptIdRoute: typeof PembahasanAttemptIdRoute
   UjianExamIdRoute: typeof UjianExamIdRoute
 }
 
@@ -179,11 +218,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/berita': {
+      id: '/berita'
+      path: '/berita'
+      fullPath: '/berita'
+      preLoaderRoute: typeof BeritaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hari-ini': {
+      id: '/hari-ini'
+      path: '/hari-ini'
+      fullPath: '/hari-ini'
+      preLoaderRoute: typeof HariIniRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/katalog': {
@@ -205,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/hasil/$examId'
       fullPath: '/hasil/$examId'
       preLoaderRoute: typeof HasilExamIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pembahasan/$attemptId': {
+      id: '/pembahasan/$attemptId'
+      path: '/pembahasan/$attemptId'
+      fullPath: '/pembahasan/$attemptId'
+      preLoaderRoute: typeof PembahasanAttemptIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/peringkat/': {
@@ -249,10 +309,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  BeritaRoute: BeritaRoute,
   DashboardRoute: DashboardRoute,
+  HariIniRoute: HariIniRoute,
   KatalogRoute: KatalogRoute,
   PeringkatRoute: PeringkatRouteWithChildren,
   HasilExamIdRoute: HasilExamIdRoute,
+  PembahasanAttemptIdRoute: PembahasanAttemptIdRoute,
   UjianExamIdRoute: UjianExamIdRoute,
 }
 export const routeTree = rootRouteImport

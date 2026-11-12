@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import {
+  CalendarDays,
   CloudOff,
   Clock,
   FileText,
@@ -13,9 +14,11 @@ import { useEffect, useMemo, useState } from "react";
 import { CatalogCover } from "@/components/catalog-cover";
 import { TimerPill } from "@/components/exam/timer-pill";
 import { PhotoCredits } from "@/components/photo-credits";
+import { SegmentedControl } from "@/components/segmented-control";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { firstName, formatDuration, percent } from "@/lib/format";
+import { firstName, formatDay, formatDuration, percent } from "@/lib/format";
+import { TRACK_FILTERS, matchesTrack, trackLabel, type TrackFilter } from "@/lib/tracks";
 import { cn } from "@/lib/utils";
 import type { CatalogEntry } from "@/lib/participant-api";
 
@@ -35,6 +38,8 @@ export function CatalogView({
   sessions,
   loading,
   failed = false,
+  track,
+  onTrack,
 }: {
   name: string | null;
   items: CatalogItem[];
@@ -42,36 +47,41 @@ export function CatalogView({
   loading: boolean;
   /** The server could not read the catalog (e.g. no database key on this machine). */
   failed?: boolean;
+  track: TrackFilter;
+  onTrack: (track: TrackFilter) => void;
 }) {
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter((it) => `${it.title} ${it.description}`.toLowerCase().includes(q));
-  }, [items, query]);
+    return items.filter(
+      (it) =>
+        matchesTrack(it.track, track) &&
+        (!q || `${it.title} ${it.description}`.toLowerCase().includes(q)),
+    );
+  }, [items, query, track]);
 
   const tried = items.filter((it) => it.myBest).length;
   const hello = name ? firstName(name) : "";
   const summary =
     items.length === 0
-      ? "Mata pelajaran akan muncul di sini."
+      ? "Paket soal akan muncul di sini."
       : tried === 0
-        ? "Pilih mata pelajaran, tulis namamu, lalu mulai. Tanpa daftar akun."
-        : `Kamu sudah mencoba ${tried} dari ${items.length} mata pelajaran.`;
+        ? "Semua paket soal, termasuk paket harian yang sudah lewat. Tanpa daftar akun."
+        : `Kamu sudah mencoba ${tried} dari ${items.length} paket.`;
 
   return (
     <div>
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="type-title-1">Katalog</h1>
+          <h1 className="type-title-1">Latihan</h1>
           <p className="type-lead mt-2 max-w-[38rem] text-muted-foreground">
             {hello ? `Halo, ${hello}. ` : ""}
             {summary}
           </p>
         </div>
-        {items.length > 3 ? (
+        {items.length > 6 ? (
           <label className="relative block w-full sm:w-72">
-            <span className="sr-only">Cari mata pelajaran</span>
+            <span className="sr-only">Cari paket</span>
             <Search
               aria-hidden
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -80,12 +90,22 @@ export function CatalogView({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari mata pelajaran"
+              placeholder="Cari paket"
               className="h-10 w-full rounded-xl bg-fill pl-9 pr-3 text-[15px] outline-none transition-shadow placeholder:text-muted-foreground focus-visible:shadow-[0_0_0_4px_var(--color-ring)]"
             />
           </label>
         ) : null}
       </div>
+
+      {items.length > 0 ? (
+        <SegmentedControl
+          value={track}
+          onChange={onTrack}
+          options={TRACK_FILTERS}
+          ariaLabel="Saring berdasarkan jalur"
+          className="mt-8 w-full sm:w-80"
+        />
+      ) : null}
 
       {sessions.length > 0 ? (
         <div className="mt-8 space-y-3">
@@ -123,7 +143,9 @@ export function CatalogView({
           <EmptyCatalog />
         ) : filtered.length === 0 ? (
           <p className="type-body py-16 text-center text-muted-foreground">
-            Tidak ada mata pelajaran yang cocok dengan “{query.trim()}”.
+            {query.trim()
+              ? `Tidak ada paket yang cocok dengan “${query.trim()}”.`
+              : "Belum ada paket untuk jalur ini."}
           </p>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -154,7 +176,13 @@ function CatalogCard({ item, eager }: { item: CatalogItem; eager: boolean }) {
   return (
     <article className="surface group flex flex-col overflow-hidden transition-[box-shadow,transform] duration-300 ease-apple hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]">
       <CatalogCover id={item.id} title={item.title} eager={eager} className="aspect-[16/9]">
-        <div className="absolute left-4 top-4 flex gap-1.5">
+        <div className="absolute inset-x-4 top-4 flex flex-wrap gap-1.5">
+          {item.dailyDate ? (
+            <CoverChip>
+              <CalendarDays className="h-3 w-3" /> {formatDay(item.dailyDate, "short")}
+            </CoverChip>
+          ) : null}
+          {item.track !== "umum" ? <CoverChip>{trackLabel(item.track)}</CoverChip> : null}
           <CoverChip>
             <FileText className="h-3 w-3" /> {item.questionCount} soal
           </CoverChip>
@@ -191,7 +219,7 @@ function CatalogCard({ item, eager }: { item: CatalogItem; eager: boolean }) {
           ) : (
             <p className="text-[13px] text-muted-foreground">
               {empty
-                ? "Belum ada soal di katalog ini."
+                ? "Belum ada soal di paket ini."
                 : item.attemptCount > 0
                   ? `Sudah ${item.attemptCount} kali dikerjakan peserta.`
                   : "Belum ada yang mencoba. Jadilah yang pertama."}
@@ -294,9 +322,9 @@ function EmptyCatalog() {
       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-fill text-muted-foreground">
         <LayoutGrid className="h-7 w-7" />
       </span>
-      <h2 className="type-title-3 mt-5">Belum ada katalog</h2>
+      <h2 className="type-title-3 mt-5">Belum ada paket</h2>
       <p className="type-callout mt-2 max-w-sm text-muted-foreground">
-        Admin belum membuat katalog ujian. Cek lagi nanti, ya.
+        Admin belum menerbitkan paket soal. Cek lagi nanti, ya.
       </p>
     </div>
   );

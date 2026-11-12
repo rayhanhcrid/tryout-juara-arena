@@ -5,13 +5,14 @@ import { InitialsAvatar } from "@/components/initials-avatar";
 import { Leaderboard, type BoardEntry } from "@/components/leaderboard";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDuration, percent } from "@/lib/format";
+import { formatDay, formatDuration, percent } from "@/lib/format";
 
 export type BoardExam = {
   id: string;
   title: string;
   duration_minutes: number;
   questionCount: number;
+  dailyDate: string | null;
 };
 
 /** One catalog's leaderboard: only the people who took this catalog. */
@@ -30,19 +31,20 @@ export function CatalogBoardView({
   return (
     <div>
       <Link
-        to="/katalog"
+        to={exam.dailyDate ? "/hari-ini" : "/katalog"}
         className="inline-flex items-center gap-0.5 rounded-full py-1 text-[15px] text-link hover:underline"
       >
-        <ChevronLeft className="h-4 w-4" /> Katalog
+        <ChevronLeft className="h-4 w-4" /> {exam.dailyDate ? "Hari ini" : "Latihan"}
       </Link>
 
       <div className="mt-3 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="type-title-1">Peringkat {exam.title}</h1>
           <p className="type-lead mt-2 max-w-[40rem] text-muted-foreground">
+            {exam.dailyDate ? `Paket ${formatDay(exam.dailyDate, "long")} · ` : ""}
             {exam.questionCount} soal · {formatDuration(exam.duration_minutes)} · {entries.length}{" "}
-            peserta. Yang dihitung skor terbaik tiap peserta; kalau sama, yang lebih dulu mengirim
-            berada di atas.
+            peserta. Yang dihitung percobaan pertama tiap peserta; kalau skornya sama, yang lebih
+            dulu mengirim berada di atas.
           </p>
         </div>
         {canStart ? (

@@ -4,33 +4,37 @@ import { AppIcon } from "@/components/brand";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { Highlights } from "@/components/landing/highlights";
 import { PhotoWall } from "@/components/landing/photo-wall";
+import { ResearchSection } from "@/components/landing/research-section";
 import { SiteHeader } from "@/components/landing/site-header";
 import { StepsGallery } from "@/components/landing/steps-gallery";
-import { SubjectRail } from "@/components/landing/subject-rail";
+import { TodaySection } from "@/components/landing/today-section";
 import { buttonVariants } from "@/components/ui/button";
-import { fetchCatalog, type CatalogEntry } from "@/lib/participant-api";
+import { fetchDaily, type Daily } from "@/lib/participant-api";
 
 export const Route = createFileRoute("/")({
-  loader: async (): Promise<{ exams: CatalogEntry[] }> => {
+  loader: async (): Promise<{ daily: Daily | null }> => {
     try {
-      return { exams: await fetchCatalog(null) };
+      return { daily: await fetchDaily(null) };
     } catch {
-      // The landing must render even when the catalog cannot be read.
-      return { exams: [] };
+      // The landing must render even when the database cannot be read.
+      return { daily: null };
     }
   },
   head: () => ({
     meta: [
-      { title: "TryOutKu — Try Out Ujian Online dengan Leaderboard" },
+      { title: "lulustes — Satu Paket Soal Sehari untuk Tes CPNS, BUMN & ODP" },
       {
         name: "description",
         content:
-          "Pilih mata pelajaran, tulis namamu, kerjakan soal dengan timer, lalu lihat skor dan peringkatmu. Tanpa daftar akun.",
+          "Latihan rutin untuk tes CPNS, BUMN, dan ODP: satu paket soal setiap hari, pembahasan tiap soal, laporan PDF, dan peringkat. Tanpa daftar akun.",
       },
-      { property: "og:title", content: "TryOutKu — Try Out Ujian Online dengan Leaderboard" },
+      {
+        property: "og:title",
+        content: "lulustes — Satu Paket Soal Sehari untuk Tes CPNS, BUMN & ODP",
+      },
       {
         property: "og:description",
-        content: "Pilih mata pelajaran, tulis namamu, dan bersaing di papan peringkat.",
+        content: "Kerjakan paket hari ini, baca pembahasannya, dan jaga hari beruntunmu.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -41,9 +45,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { exams } = Route.useLoaderData();
-  // Same rule SubjectRail uses to decide whether it renders at all.
-  const hasSubjects = exams.some((e) => e.questionCount > 0);
+  const { daily } = Route.useLoaderData();
 
   return (
     <div className="page-dark dark min-h-screen bg-background">
@@ -56,24 +58,17 @@ function Index() {
           <div aria-hidden className="hero-scrim pointer-events-none absolute inset-0 -z-10" />
           <div className="mx-auto max-w-[980px] px-5 text-center sm:px-8">
             <h1 className="type-hero animate-rise">
-              <span className="block">Latihan ujian.</span>
-              <span className="block text-tertiary">Rasanya seperti hari H.</span>
+              <span className="block">Satu paket soal sehari.</span>
+              <span className="block text-tertiary">Sampai lulus tes.</span>
             </h1>
-            <p className="type-lead animate-rise mx-auto mt-6 max-w-[36rem] text-muted-foreground [animation-delay:120ms]">
-              Pilih mata pelajaran, tulis namamu, lalu kerjakan soal dengan waktu yang terus
-              berjalan. Tanpa daftar akun.
+            <p className="type-lead animate-rise mx-auto mt-6 max-w-[38rem] text-muted-foreground [animation-delay:120ms]">
+              Latihan rutin untuk tes CPNS, BUMN, dan ODP. Kerjakan paket hari ini, baca pembahasan
+              tiap soal, dan jaga hari beruntunmu. Tanpa daftar akun.
             </p>
             <div className="animate-rise mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 [animation-delay:220ms]">
-              {/* The subjects are right below; the full catalog page is one more step. */}
-              {hasSubjects ? (
-                <a href="#mata-pelajaran" className={buttonVariants({ size: "lg" })}>
-                  Pilih mata pelajaran
-                </a>
-              ) : (
-                <Link to="/katalog" className={buttonVariants({ size: "lg" })}>
-                  Pilih mata pelajaran
-                </Link>
-              )}
+              <Link to="/hari-ini" className={buttonVariants({ size: "lg" })}>
+                Kerjakan paket hari ini
+              </Link>
               <a
                 href="#cara-kerja"
                 className="inline-flex items-center gap-0.5 text-[17px] text-link hover:underline"
@@ -86,13 +81,14 @@ function Index() {
           <div className="mt-12 px-4 sm:mt-14 sm:px-8">
             <HeroStage />
             <p className="mx-auto mt-8 max-w-md text-center type-footnote text-muted-foreground">
-              Ujian di layar ini bisa kamu coba. Soalnya dari katalog contoh, dan tidak ada yang
-              disimpan.
+              Ujian di layar ini bisa kamu coba: soalnya contoh dan tidak ada yang disimpan. Layar
+              lainnya tampilan contoh.
             </p>
           </div>
         </section>
 
-        <SubjectRail exams={exams} />
+        <TodaySection daily={daily} />
+        <ResearchSection />
         <StepsGallery />
         <Highlights />
 
@@ -101,15 +97,13 @@ function Index() {
           <div aria-hidden className="cta-scrim pointer-events-none absolute inset-0 -z-10" />
           <div className="mx-auto max-w-[980px] px-5 sm:px-8">
             <AppIcon size={72} className="mx-auto" />
-            <h2 className="type-title-1 mx-auto mt-8 max-w-[16ch]">
-              Waktumu dimulai saat kamu siap.
-            </h2>
+            <h2 className="type-title-1 mx-auto mt-8 max-w-[16ch]">Lulus tes dimulai hari ini.</h2>
             <p className="type-lead mx-auto mt-5 max-w-[30rem] text-muted-foreground">
-              Tidak perlu akun. Pilih mata pelajaran, tulis namamu, dan mulai.
+              Tidak perlu akun. Tulis namamu, kerjakan paket hari ini, lalu baca pembahasannya.
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-              <Link to="/katalog" className={buttonVariants({ size: "lg" })}>
-                Pilih mata pelajaran
+              <Link to="/hari-ini" className={buttonVariants({ size: "lg" })}>
+                Kerjakan paket hari ini
               </Link>
             </div>
           </div>
@@ -118,10 +112,16 @@ function Index() {
 
       <footer className="border-t border-hairline bg-background">
         <div className="mx-auto flex max-w-[1080px] flex-col gap-4 px-5 py-8 text-[12px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <p>© {new Date().getFullYear()} TryOutKu. Latihan ujian online.</p>
+          <p>© {new Date().getFullYear()} lulustes. Latihan harian tes CPNS, BUMN, dan ODP.</p>
           <nav className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Tautan kaki">
+            <Link to="/hari-ini" className="hover:text-foreground hover:underline">
+              Hari ini
+            </Link>
             <Link to="/katalog" className="hover:text-foreground hover:underline">
-              Katalog
+              Latihan
+            </Link>
+            <Link to="/berita" className="hover:text-foreground hover:underline">
+              Berita
             </Link>
             <Link to="/admin" className="hover:text-foreground hover:underline">
               Panel admin

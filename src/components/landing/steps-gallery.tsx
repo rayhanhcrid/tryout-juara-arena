@@ -1,28 +1,28 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Phone } from "@/components/landing/devices";
-import { CatalogScreen, ExamScreen, NameScreen, ResultScreen } from "@/components/landing/screens";
+import { DailyScreen, ExamScreen, ResultScreen, ReviewScreen } from "@/components/landing/screens";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
   {
-    title: "Pilih mata pelajaran.",
-    body: "Matematika, Fisika, sampai Informatika. Setiap katalog menunjukkan jumlah soal dan durasinya sejak awal.",
-    screen: <CatalogScreen columns={1} count={4} topInset={30} />,
+    title: "Buka paket hari ini.",
+    body: "Setiap hari terbit satu paket soal baru untuk CPNS, BUMN, atau ODP. Jumlah soal dan durasinya terlihat sebelum mulai.",
+    screen: <DailyScreen topInset={30} />,
   },
   {
-    title: "Tulis namamu, lalu mulai.",
-    body: "Tanpa daftar akun. Nama inilah yang nanti tampil di papan peringkat.",
-    screen: <NameScreen topInset={30} />,
-  },
-  {
-    title: "Kerjakan sebelum waktu habis.",
-    body: "Lompat ke soal mana pun dan tandai yang ragu-ragu. Waktu habis? Jawabanmu terkirim otomatis.",
+    title: "Kerjakan seperti hari H.",
+    body: "Tulis namamu, tanpa daftar akun. Timer berjalan, soal bisa ditandai ragu-ragu, dan jawaban terkirim otomatis saat waktu habis.",
     screen: <ExamScreen topInset={34} />,
   },
   {
-    title: "Lihat skor dan peringkatmu.",
-    body: "Skor muncul begitu jawaban terkirim, dan skor terbaikmu langsung masuk papan peringkat mata pelajaran itu.",
+    title: "Lihat yang benar dan yang salah.",
+    body: "Begitu terkirim, kunci dan pembahasan tiap soal terbuka. Simpan laporannya sebagai PDF untuk diulang nanti.",
+    screen: <ReviewScreen topInset={30} />,
+  },
+  {
+    title: "Jaga hari beruntunmu.",
+    body: "Kirim paket di harinya untuk menambah hitungan. Percobaan pertamamu yang masuk papan peringkat paket itu.",
     screen: <ResultScreen topInset={30} />,
   },
 ];
@@ -87,7 +87,7 @@ export function StepsGallery() {
       aria-roledescription="carousel"
     >
       <div className="mx-auto max-w-[1080px] px-5 sm:px-8">
-        <h2 className="type-title-1 max-w-[16ch]">Empat langkah. Itu saja.</h2>
+        <h2 className="type-title-1 max-w-[16ch]">Empat langkah, setiap hari.</h2>
       </div>
 
       <ul

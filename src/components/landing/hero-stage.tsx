@@ -1,11 +1,11 @@
 import { DemoExam } from "@/components/landing/demo-exam";
 import { Laptop, Phone, Tablet, useFitScale } from "@/components/landing/devices";
-import { CatalogScreen, ResultScreen } from "@/components/landing/screens";
+import { CatalogScreen, DailyScreen } from "@/components/landing/screens";
 
 /**
  * The hero's device lineup. Wide screens: a laptop whose lid opens as you
  * scroll, running the playable exam, flanked by a tablet (the catalog) and a
- * phone (the score). Phones: the playable exam on a phone, tablet behind.
+ * phone (Hari ini, the routine). Phones: the playable exam on a phone, tablet behind.
  */
 export function HeroStage() {
   return (
@@ -54,7 +54,7 @@ function WideStage() {
         </div>
         <div className="stage-right absolute left-[1000px] top-[290px] z-20">
           <Phone width={192}>
-            <ResultScreen topInset={26} />
+            <DailyScreen topInset={26} />
           </Phone>
         </div>
       </div>

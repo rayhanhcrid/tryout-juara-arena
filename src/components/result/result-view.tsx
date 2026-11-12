@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, RotateCcw, Trophy } from "lucide-react";
+import { BookOpenCheck, ChevronLeft, ChevronRight, RotateCcw, Trophy } from "lucide-react";
 import { Leaderboard, type BoardEntry } from "@/components/leaderboard";
 import { ScoreRing, useCountUp } from "@/components/score-ring";
 import { buttonVariants } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { formatDateTime, percent } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export type AttemptItem = { id: string; score: number; total: number; submitted_at: string };
+
+export type ResultBack = { to: "/hari-ini" | "/katalog"; label: string };
 
 function CountedScore({ score, total }: { score: number; total: number }) {
   const value = useCountUp(score, 1600);
@@ -18,9 +20,23 @@ function CountedScore({ score, total }: { score: number; total: number }) {
   );
 }
 
+function Badge({ tone, children }: { tone: "first" | "best"; children: React.ReactNode }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+        tone === "first" ? "bg-primary/20 text-link" : "bg-success/15 text-success-ink",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
 /**
  * The score moment, on black: one large activity ring that fills while the
- * number counts up, then the board and this participant's history.
+ * number counts up, the way into the explanations, then the board and this
+ * participant's history. The board ranks first attempts only.
  */
 export function ResultView({
   exam,
@@ -29,6 +45,8 @@ export function ResultView({
   meId,
   fresh,
   guestName,
+  streak,
+  back,
 }: {
   exam: { id: string; title: string };
   /** This participant's attempts, newest first. May be empty for a visitor. */
@@ -38,8 +56,12 @@ export function ResultView({
   /** True right after submitting: the ring shows this attempt, not the best one. */
   fresh: boolean;
   guestName: string | null;
+  /** Days in a row, shown when this is today's package. */
+  streak: number | null;
+  back: ResultBack;
 }) {
   const latest = attempts[0];
+  const first = attempts[attempts.length - 1];
   const best = attempts.length > 0 ? attempts.reduce((a, b) => (b.score > a.score ? b : a)) : null;
   const shown = fresh ? latest : best;
   const myRank = meId ? (leaderboard.find((e) => e.user_id === meId) ?? null) : null;
@@ -47,18 +69,18 @@ export function ResultView({
   return (
     <div className="mx-auto max-w-4xl">
       <Link
-        to="/katalog"
+        to={back.to}
         className="inline-flex items-center gap-0.5 rounded-full py-1 text-[15px] text-link hover:underline"
       >
-        <ChevronLeft className="h-4 w-4" /> Katalog
+        <ChevronLeft className="h-4 w-4" /> {back.label}
       </Link>
 
-      {shown && best && latest ? (
+      {shown && best && latest && first ? (
         <ScoreMoment
           exam={exam}
           shown={shown}
           best={best}
-          latest={latest}
+          first={first}
           attemptsCount={attempts.length}
           isNewBest={
             fresh &&
@@ -69,6 +91,8 @@ export function ResultView({
           rank={myRank?.rank ?? null}
           participants={leaderboard.length}
           guestName={guestName}
+          streak={streak}
+          back={back}
         />
       ) : (
         <section className="flex flex-col items-center pb-6 pt-10 text-center">
@@ -77,7 +101,7 @@ export function ResultView({
           </span>
           <h1 className="type-title-1 mt-8">{exam.title}</h1>
           <p className="type-lead mt-3 max-w-xl text-muted-foreground">
-            Kerjakan ujian ini dan lihat posisimu di papan peringkat.
+            Kerjakan paket ini, lihat posisimu di papan peringkat, lalu baca pembahasannya.
           </p>
           <Link
             to="/ujian/$examId"
@@ -115,49 +139,57 @@ export function ResultView({
         </div>
       </section>
 
-      {attempts.length > 0 && best ? (
+      {attempts.length > 0 && best && first ? (
         <section className="mt-16" aria-labelledby="riwayat-heading">
           <h2 id="riwayat-heading" className="type-title-2">
             Riwayat pengerjaanmu
           </h2>
+          <p className="type-callout mt-2 text-muted-foreground">
+            Buka percobaan mana pun untuk melihat kunci dan pembahasannya.
+          </p>
           <ol className="mt-6 overflow-hidden rounded-2xl bg-card">
             {attempts.map((a, i) => {
               const p = percent(a.score, a.total);
-              const isBest = a.id === best.id;
               return (
-                <li key={a.id} className="relative flex items-center gap-4 px-5 py-3.5">
+                <li key={a.id} className="relative">
                   {i > 0 ? (
                     <span aria-hidden className="absolute inset-x-0 top-0 ml-5 h-px bg-hairline" />
                   ) : null}
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 text-[15px] font-medium">
-                      {formatDateTime(a.submitted_at)}
-                      {isBest ? (
-                        <span className="rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-semibold text-success-ink">
-                          Terbaik
-                        </span>
-                      ) : null}
-                    </p>
-                    <div
-                      className="mt-2 h-1 max-w-56 overflow-hidden rounded-full bg-fill"
-                      aria-hidden
-                    >
+                  <Link
+                    to="/pembahasan/$attemptId"
+                    params={{ attemptId: a.id }}
+                    className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-secondary/60 focus-visible:outline-offset-[-3px]"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="flex flex-wrap items-center gap-2 text-[15px] font-medium">
+                        {formatDateTime(a.submitted_at)}
+                        {a.id === first.id ? <Badge tone="first">Masuk peringkat</Badge> : null}
+                        {a.id === best.id && attempts.length > 1 ? (
+                          <Badge tone="best">Terbaik</Badge>
+                        ) : null}
+                      </p>
                       <div
-                        className={cn(
-                          "h-full rounded-full",
-                          p >= 80 ? "bg-success" : p >= 50 ? "bg-primary" : "bg-warning",
-                        )}
-                        style={{ width: `${p}%` }}
-                      />
+                        className="mt-2 h-1 max-w-56 overflow-hidden rounded-full bg-fill"
+                        aria-hidden
+                      >
+                        <div
+                          className={cn(
+                            "h-full rounded-full",
+                            p >= 80 ? "bg-success" : p >= 50 ? "bg-primary" : "bg-warning",
+                          )}
+                          style={{ width: `${p}%` }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <p className="tabular text-right text-[17px] font-semibold tracking-[-0.02em]">
-                    {a.score}
-                    <span className="text-muted-foreground">/{a.total}</span>
-                    <span className="block text-[12px] font-normal text-muted-foreground">
-                      {p}%
-                    </span>
-                  </p>
+                    <p className="tabular text-right text-[17px] font-semibold tracking-[-0.02em]">
+                      {a.score}
+                      <span className="text-muted-foreground">/{a.total}</span>
+                      <span className="block text-[12px] font-normal text-muted-foreground">
+                        {p}%
+                      </span>
+                    </p>
+                    <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-tertiary" />
+                  </Link>
                 </li>
               );
             })}
@@ -172,57 +204,67 @@ function ScoreMoment({
   exam,
   shown,
   best,
-  latest,
+  first,
   attemptsCount,
   isNewBest,
   fresh,
   rank,
   participants,
   guestName,
+  streak,
+  back,
 }: {
   exam: { id: string; title: string };
   shown: AttemptItem;
   best: AttemptItem;
-  latest: AttemptItem;
+  first: AttemptItem;
   attemptsCount: number;
   isNewBest: boolean;
   fresh: boolean;
   rank: number | null;
   participants: number;
   guestName: string | null;
+  streak: number | null;
+  back: ResultBack;
 }) {
   const pct = percent(shown.score, shown.total);
   const firstTry = attemptsCount === 1;
   const who = guestName ? guestName.split(" ")[0] : null;
+  const firstScore = `${first.score}/${first.total}`;
 
   let headline: string;
   let line: string;
   if (!fresh) {
     headline = "Skor terbaikmu.";
-    line = "Skor inilah yang tercatat di papan peringkat.";
+    line =
+      shown.id === first.id
+        ? "Ini juga percobaan pertamamu, yang tercatat di papan peringkat."
+        : `Papan peringkat memakai percobaan pertamamu, ${firstScore}.`;
   } else if (firstTry) {
     headline =
       pct >= 80 ? `Keren${who ? `, ${who}` : ""}. Awal yang kuat.` : "Jawabanmu sudah dinilai.";
-    line = "Skor ini langsung masuk papan peringkat.";
+    line = "Skor ini masuk papan peringkat. Sekarang lihat mana yang benar dan mana yang salah.";
   } else if (isNewBest) {
     headline = "Skor terbaik baru.";
-    line = "Papan peringkat sudah memakai skor ini.";
+    line = `Latihan ulang tidak mengubah peringkat: papan tetap memakai percobaan pertamamu, ${firstScore}.`;
   } else {
-    headline = "Jawabanmu sudah dinilai.";
-    line = `Skor terbaikmu tetap ${best.score}/${best.total}, dan itu yang dipakai di papan peringkat.`;
+    headline = "Latihan ulang tercatat.";
+    line = `Papan peringkat tetap memakai percobaan pertamamu, ${firstScore}.`;
   }
 
   const stats = [
     { label: "Peringkat", value: rank ? `#${rank}` : "–", sub: `dari ${participants} peserta` },
-    {
-      label: "Terbaik",
-      value: `${best.score}/${best.total}`,
-      sub: `${percent(best.score, best.total)}% benar`,
-    },
+    streak !== null
+      ? { label: "Beruntun", value: `${streak}`, sub: "hari berturut-turut" }
+      : {
+          label: "Terbaik",
+          value: `${best.score}/${best.total}`,
+          sub: `${percent(best.score, best.total)}% benar`,
+        },
     {
       label: "Percobaan",
       value: `${attemptsCount}×`,
-      sub: fresh && latest ? "termasuk yang ini" : "total",
+      sub: fresh ? "termasuk yang ini" : "total",
     },
   ];
 
@@ -253,16 +295,27 @@ function ScoreMoment({
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
+          to="/pembahasan/$attemptId"
+          params={{ attemptId: shown.id }}
+          className={buttonVariants({ size: "lg" })}
+        >
+          <BookOpenCheck /> Lihat pembahasan
+        </Link>
+        <Link
           to="/ujian/$examId"
           params={{ examId: exam.id }}
-          className={buttonVariants({ size: "lg" })}
+          className={buttonVariants({ size: "lg", variant: "secondary" })}
         >
           <RotateCcw /> Kerjakan lagi
         </Link>
-        <Link to="/katalog" className={buttonVariants({ size: "lg", variant: "secondary" })}>
-          Mata pelajaran lain
-        </Link>
       </div>
+      <Link
+        to={back.to}
+        className="mt-6 inline-flex items-center text-[15px] text-link hover:underline"
+      >
+        {back.to === "/hari-ini" ? "Kembali ke Hari ini" : "Paket lainnya"}{" "}
+        <ChevronRight className="h-4 w-4" />
+      </Link>
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   ArrowRight,
+  BookOpenCheck,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -10,8 +11,8 @@ import {
   RotateCw,
   Send,
   Timer,
+  Trophy,
   X,
-  ZoomIn,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
@@ -22,6 +23,7 @@ import { FieldGroup, FloatingField } from "@/components/form-fields";
 import { NavigatorGrid, NavigatorLegend, type CellState } from "@/components/exam/navigator-grid";
 import { CategoryRows } from "@/components/exam/category-rows";
 import { OptionRow } from "@/components/exam/option-row";
+import { QuestionBody } from "@/components/exam/question-body";
 import { TimerPill } from "@/components/exam/timer-pill";
 import {
   AlertDialog,
@@ -34,7 +36,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   clearSession,
@@ -45,7 +46,6 @@ import {
   storageSet,
 } from "@/lib/exam-session";
 import { formatClock, formatDuration } from "@/lib/format";
-import { isLongStem, splitQuestionText } from "@/lib/question-format";
 import {
   LETTERS,
   QUESTION_KINDS,
@@ -70,6 +70,8 @@ export type RunnerQuestion = QuestionShape & {
   id: string;
   text: string;
   imageUrl: string | null;
+  /** The subtes (TWK, TIU…), shown in the focus bar. */
+  section: string | null;
 };
 
 type Answers = Record<string, Answer>;
@@ -105,6 +107,7 @@ export function ExamRunner({
   defaultName,
   onSubmit,
   onExit,
+  exitLabel,
 }: {
   exam: RunnerExam;
   questions: RunnerQuestion[];
@@ -115,6 +118,8 @@ export function ExamRunner({
   /** Sends the answers under the participant's name; throws on failure. */
   onSubmit: (answers: Answers, nama: string) => Promise<void>;
   onExit: () => void;
+  /** Where leaving goes ("Hari ini", "Latihan"); also where a running attempt can be resumed. */
+  exitLabel: string;
 }) {
   const keys = sessionKeys(ownerId, exam.id);
   const totalMs = exam.duration_minutes * 60_000;
@@ -349,6 +354,7 @@ export function ExamRunner({
         defaultName={nama}
         onStart={start}
         onBack={onExit}
+        backLabel={exitLabel}
       />
     );
   }
@@ -407,8 +413,9 @@ export function ExamRunner({
           <SubjectThumb exam={exam} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold tracking-[-0.015em]">{exam.title}</p>
-            <p className="tabular text-[12px] text-muted-foreground">
-              {nama} · Soal {current + 1} dari {questions.length} · {answeredCount} terjawab
+            <p className="tabular truncate text-[12px] text-muted-foreground">
+              {nama} · Soal {current + 1} dari {questions.length}
+              {q.section ? ` · ${q.section}` : ""} · {answeredCount} terjawab
             </p>
           </div>
           <TimerPill
@@ -589,8 +596,8 @@ export function ExamRunner({
           <AlertDialogHeader>
             <AlertDialogTitle>Keluar dari ujian?</AlertDialogTitle>
             <AlertDialogDescription>
-              Timer tetap berjalan. Kamu bisa melanjutkan dari halaman Katalog selama waktunya masih
-              ada.
+              Timer tetap berjalan. Kamu bisa melanjutkan dari halaman {exitLabel} selama waktunya
+              masih ada.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -662,12 +669,14 @@ function ExamIntro({
   defaultName,
   onStart,
   onBack,
+  backLabel,
 }: {
   exam: RunnerExam;
   questions: RunnerQuestion[];
   defaultName: string;
   onStart: (name: string) => void;
   onBack: () => void;
+  backLabel: string;
 }) {
   const [name, setName] = useState(defaultName);
   const [touched, setTouched] = useState(false);
@@ -683,6 +692,8 @@ function ExamIntro({
     { icon: Flag, text: "Tandai soal ragu-ragu, cek lagi sebelum kirim" },
     { icon: RotateCw, text: "Jawaban tersimpan walau halaman ter-refresh" },
     { icon: Send, text: "Waktu habis? Jawabanmu terkirim otomatis" },
+    { icon: Trophy, text: "Percobaan pertamamu yang masuk papan peringkat" },
+    { icon: BookOpenCheck, text: "Kunci dan pembahasan terbuka setelah kamu kirim" },
   ];
 
   function handleSubmit(e: React.FormEvent) {
@@ -711,7 +722,7 @@ function ExamIntro({
           onClick={onBack}
           className="inline-flex cursor-pointer items-center gap-0.5 rounded-full px-1 py-2 text-[15px] text-white/85 transition-colors hover:text-white"
         >
-          <ChevronLeft className="h-4 w-4" /> Katalog
+          <ChevronLeft className="h-4 w-4" /> {backLabel}
         </button>
       </div>
 
@@ -932,126 +943,5 @@ function AnswerArea({
         })}
       </div>
     </div>
-  );
-}
-
-/**
- * A short question alone reads as a headline. A question with a reading
- * passage (see splitQuestionText) shows passage, image, then the question.
- */
-function QuestionBody({ text, imageUrl }: { text: string; imageUrl: string | null }) {
-  const { stimulus, stem } = splitQuestionText(text);
-  const image = imageUrl ? <QuestionImage url={imageUrl} /> : null;
-  const stemClass = isLongStem(stem)
-    ? "whitespace-pre-line text-[19px] font-semibold leading-[1.45] tracking-[-0.014em] sm:text-[21px]"
-    : "whitespace-pre-line font-display text-[clamp(1.375rem,1.1rem+1.1vw,1.875rem)] font-semibold leading-[1.3] tracking-[-0.022em]";
-
-  const heading = (
-    <h1 className={cn(stemClass, stimulus && "mt-8")}>
-      <StemLines stem={stem} />
-    </h1>
-  );
-  if (!stimulus) {
-    return (
-      <>
-        {heading}
-        {image}
-      </>
-    );
-  }
-  return (
-    <>
-      <p className="type-body whitespace-pre-line leading-[1.6] text-pretty">{stimulus}</p>
-      {image}
-      {heading}
-    </>
-  );
-}
-
-const NUMBERED = /^\((\d+)\)\s+(.*)$/;
-
-/** Numbered statements, "(1) …", read as a list in body weight under the question's lines. */
-function StemLines({ stem }: { stem: string }) {
-  const lines = stem.split(/\r?\n/);
-  if (!lines.some((l) => NUMBERED.test(l))) return <>{stem}</>;
-  return (
-    <>
-      {lines.map((line, i) => {
-        const m = NUMBERED.exec(line);
-        const prevNumbered = i > 0 && NUMBERED.test(lines[i - 1] ?? "");
-        // Space where the list starts and ends; list items sit closer together.
-        const gap = i === 0 ? "" : !!m === prevNumbered ? (m ? "mt-1.5" : "") : "mt-3";
-        if (!m) {
-          return (
-            <span key={i} className={cn("block", gap)}>
-              {line}
-            </span>
-          );
-        }
-        return (
-          <span
-            key={i}
-            className={cn("grid grid-cols-[2.25rem_1fr] font-normal tracking-[-0.012em]", gap)}
-          >
-            <span className="tabular text-muted-foreground">({m[1]})</span>
-            <span>{m[2]}</span>
-          </span>
-        );
-      })}
-    </>
-  );
-}
-
-function QuestionImage({ url }: { url: string }) {
-  const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const [zoom, setZoom] = useState(false);
-
-  useEffect(() => {
-    setFailed(false);
-    setLoaded(false);
-  }, [url]);
-
-  if (failed) {
-    return (
-      <p className="mt-6 rounded-2xl bg-fill px-4 py-6 text-center type-callout text-muted-foreground">
-        Gambar soal gagal dimuat. Coba muat ulang halaman.
-      </p>
-    );
-  }
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setZoom(true)}
-        className={cn(
-          "group relative mt-6 block cursor-zoom-in overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-card)]",
-          !loaded && "min-h-56 min-w-72 animate-pulse bg-fill",
-        )}
-        aria-label="Perbesar gambar soal"
-      >
-        <img
-          src={url}
-          alt="Gambar soal"
-          onLoad={() => setLoaded(true)}
-          onError={() => setFailed(true)}
-          className="max-h-[22rem] w-auto object-contain sm:max-h-[30rem]"
-        />
-        <span className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-white opacity-0 backdrop-blur-md transition-opacity group-hover:opacity-100">
-          <ZoomIn className="h-4 w-4" />
-        </span>
-      </button>
-      <Dialog open={zoom} onOpenChange={setZoom}>
-        <DialogContent className="max-w-4xl p-3 sm:p-3">
-          <DialogTitle className="sr-only">Gambar soal</DialogTitle>
-          <img
-            src={url}
-            alt="Gambar soal, diperbesar"
-            className="max-h-[80dvh] w-full rounded-2xl object-contain"
-          />
-        </DialogContent>
-      </Dialog>
-    </>
   );
 }

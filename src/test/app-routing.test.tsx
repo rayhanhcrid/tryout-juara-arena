@@ -19,6 +19,9 @@ describe("App routing", () => {
   it.each([
     ["/admin", "/admin"],
     ["/katalog", "/katalog"],
+    ["/hari-ini", "/hari-ini"],
+    ["/berita", "/berita"],
+    ["/pembahasan/abc", "/pembahasan/$attemptId"],
     ["/peringkat/abc", "/peringkat/$examId"],
     ["/ujian/abc", "/ujian/$examId"],
     ["/hasil/abc", "/hasil/$examId"],

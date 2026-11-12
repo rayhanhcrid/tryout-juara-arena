@@ -9,20 +9,23 @@ export function SiteHeader() {
       <nav className="mx-auto flex h-[52px] max-w-[1080px] items-center justify-between gap-6 px-5 sm:px-8">
         <BrandLink iconSize={24} />
         <div className="hidden items-center gap-8 text-[13px] text-foreground/80 md:flex">
-          <Link to="/katalog" className="transition-colors hover:text-foreground">
-            Katalog
+          <Link to="/hari-ini" className="transition-colors hover:text-foreground">
+            Hari ini
           </Link>
-          <a href="#mata-pelajaran" className="transition-colors hover:text-foreground">
-            Mata pelajaran
+          <Link to="/katalog" className="transition-colors hover:text-foreground">
+            Latihan
+          </Link>
+          <Link to="/berita" className="transition-colors hover:text-foreground">
+            Berita
+          </Link>
+          <a href="#riset" className="transition-colors hover:text-foreground">
+            Riset
           </a>
           <a href="#cara-kerja" className="transition-colors hover:text-foreground">
             Cara kerja
           </a>
-          <a href="#fitur" className="transition-colors hover:text-foreground">
-            Fitur
-          </a>
         </div>
-        <Link to="/katalog" className={buttonVariants({ size: "sm" })}>
+        <Link to="/hari-ini" className={buttonVariants({ size: "sm" })}>
           Mulai
         </Link>
       </nav>

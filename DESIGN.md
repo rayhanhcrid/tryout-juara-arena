@@ -1,6 +1,6 @@
 ---
-name: TryOutKu
-description: Try out ujian online dengan timer, skor otomatis, dan papan peringkat, dalam gaya Apple: beranda dan momen skor gelap sinematik, halaman kerja terang.
+name: lulustes
+description: Latihan harian tes CPNS, BUMN, dan ODP (satu paket soal sehari, hari beruntun, pembahasan, peringkat) dalam gaya Apple: beranda dan momen skor gelap sinematik, halaman kerja terang.
 colors:
   action-blue: "#0071e3"
   action-blue-hover: "#0077ed"
@@ -139,15 +139,15 @@ components:
     height: "36px"
 ---
 
-# Design System: TryOutKu
+# Design System: lulustes
 
 ## Overview
 
 **Creative North Star: "The Quiet Exam Hall"**
 
-TryOutKu looks and behaves like a first-party Apple product, in two worlds. The landing page and the score moment are dark and cinematic: a black ground, iOS dark surfaces, and app screens glowing inside device frames. The working pages (catalog, exam, leaderboard, admin) are light: pale gray and white grounds, near-black ink. One action blue carries every primary action in both. The exam interface is treated as the product: the landing shows it the way Apple shows hardware, on a laptop whose lid opens as you scroll and whose screen runs a playable exam, flanked by a tablet (the catalog) and a phone (the score). The app screens borrow iOS and macOS structure (large titles, grouped inset lists, sheets, segmented controls, a source-list sidebar) so a visitor knows where everything is before noticing the style.
+lulustes looks and behaves like a first-party Apple product, in two worlds. The landing page and the score moment are dark and cinematic: a black ground, iOS dark surfaces, and app screens glowing inside device frames. The working pages (Hari ini, Latihan, Berita, exam, review, leaderboard, admin) are light: pale gray and white grounds, near-black ink. One action blue carries every primary action in both. The exam interface is treated as the product: the landing shows it the way Apple shows hardware, on a laptop whose lid opens as you scroll and whose screen runs a playable exam, flanked by a tablet (Latihan) and a phone (Hari ini, the routine). The app screens borrow iOS and macOS structure (large titles, grouped inset lists, sheets, segmented controls, a source-list sidebar) so a visitor knows where everything is before noticing the style.
 
-Density is low on public pages and moderate in the app. Color is reserved for state: green for answered and correct, orange for remaining time and "ragu-ragu" (unsure), red for the last minute and destructive actions, gold, silver and bronze for the top three ranks. Each known subject's cover is a real photograph of its world (Raja Ampat for TKA Geografi, Bromo for Geografi, Borobudur for Sejarah, and so on), bundled under public/covers from Wikimedia Commons with credits on the catalog page; the subject's iOS hue shows while it loads, and an unknown subject keeps the hue with a cropped monogram.
+Density is low on public pages and moderate in the app. Color is reserved for state: green for answered and correct, orange for remaining time and "ragu-ragu" (unsure), red for the last minute, wrong answers in the review and destructive actions, gold, silver and bronze for the top three ranks. Each known subtes or selection has a real photograph (Gedung Pancasila for TWK, a formula blackboard for TIU, Yogyakarta street life for TKP, Borobudur for SKD/CPNS, a floating market for BUMN, an abacus for ODP, and so on), bundled under public/covers from Wikimedia Commons with credits on the Latihan page; the subject's iOS hue shows while it loads, and an unknown subject keeps the hue with a cropped monogram.
 
 The old look (cream paper, Lora serif, gold underline, emoji icons) is retired and should not come back.
 
@@ -175,16 +175,16 @@ A restrained Apple palette: neutral grounds, one action blue, and system colors 
 - **Black Panel** (black-panel): the single dark bento tile and phone bezels.
 
 ### State
-- **Answered Green** (answered-green) marks correct keys and strong scores (80% and up); text uses **Answered Green Ink**.
+- **Answered Green** (answered-green) marks correct keys, correct answers in the review, and strong scores (80% and up); text uses **Answered Green Ink**. Kept days in the week strip are Action Blue, not green: keeping the routine is an action, not a grade.
 - **Time Orange** (time-orange) marks under five minutes left and "ragu-ragu" flags; text uses **Time Orange Ink**.
-- **Alert Red** (alert-red) marks the final minute and destructive actions; text uses **Alert Red Ink**.
+- **Alert Red** (alert-red) marks the final minute, a wrong answer in the review, and destructive actions; text uses **Alert Red Ink**.
 - **Medal Gold / Silver / Bronze** appear only as rank rings and badges on the podium, always with ink-colored numerals on top.
 
 ### Night (landing and score moment)
 - **Night Ground** (night-ground) is the page; **Night Surface** (night-surface) holds tiles, cards and the stats row; **Night Control** (night-control) fills secondary buttons and inner chips. Text is **Night Ink** with **Night Ink Secondary** for supporting copy and **Night Ink Tertiary** for large text only. Links use Link Blue on Dark.
 
 ### Named Rules
-**The Two Worlds Rule.** Dark is for looking (the landing, the score moment); light is for working (catalog, exam, leaderboard, admin). App screens shown on the dark landing stay light, as a light island inside the dark page.
+**The Two Worlds Rule.** Dark is for looking (the landing, the score moment); light is for working (Hari ini, Latihan, Berita, exam, review and its PDF, leaderboard, admin). App screens shown on the dark landing stay light, as a light island inside the dark page.
 
 **The State-Only Color Rule.** Green, orange, red and the medal colors appear only where they carry meaning. A decorative use of them is a bug.
 
@@ -212,9 +212,9 @@ A restrained Apple palette: neutral grounds, one action blue, and system colors 
 
 ## Layout
 
-Centered single columns with generous air on public pages (max 1080px; hero copy max 980px), and a 1152px app container with a 20px phone gutter and 32px wide gutter. Sections alternate Page Gray and Surface White grounds with 96–128px vertical padding. The landing story: hero with the exam slab over a tilted wall of the subject photographs drifting row against row (held still under reduced motion, darkened behind the type), the subject rail that the hero's main button scrolls to, a pinned paragraph lit word by word (a 260vh track), a three-step sequence where one sticky phone changes its screen, a bento of uneven tiles (4+2, 2+2+2, 6), then a quiet closing call to action.
+Centered single columns with generous air on public pages (max 1080px; hero copy max 980px), and a 1152px app container with a 20px phone gutter and 32px wide gutter. Sections alternate Page Gray and Surface White grounds with 96–128px vertical padding. The landing story: hero (two-line headline "Satu paket soal sehari. / Sampai lulus tes.") with the device stage over a tilted wall of the cover photographs drifting row against row (held still under reduced motion, darkened behind the type); "Paket hari ini", the real package of the day from the database as one wide card (photo left, facts and Kerjakan sekarang right), absent on a day without one; "Kenapa harus tiap hari?", three research findings (Lally et al. 2010 habit curve, Roediger & Karpicke 2006 retention columns, Dunlosky et al. 2013 technique ratings), each a text column beside a chart panel, alternating sides, with a caveat and full citations; the four-step swipe gallery (Hari ini, exam, review, score); a bento of uneven tiles (4+2, 2+2+2, 4+2) led by the routine tile; then a quiet closing call to action.
 
-App screens put a large title and its one-line context at the top, then content. The exam opens on a dark, full-bleed intro: the subject photo settling in from a slight zoom, the title large at the left, and a dark-glass panel holding the timer ring, the name field and Mulai. Running, it is focus mode with no app chrome: a frosted bar (close, subject thumbnail, title, timer), the question on a white sheet (max 768px) floating over the same photo blurred to a wash of colour, and on wide screens a sticky navigator panel (288px). A short question is set as the column's headline; a question with a reading passage (TKA style) reads passage (Body, 1.6 leading), then figure, then the question in 19–21px semibold, with numbered statements "(1) …" as a hanging list in body weight. Phones swap the panel for a bottom toolbar and a sheet. Admin is a split view (336px catalog source list plus detail) that becomes a push-navigation stack below 1024px.
+App screens put a large title and its one-line context at the top, then content. The exam opens on a dark, full-bleed intro: the subject photo settling in from a slight zoom, the title large at the left, and a dark-glass panel holding the timer ring, the name field and Mulai. Running, it is focus mode with no app chrome: a frosted bar (close, subject thumbnail, title, timer), the question on a white sheet (max 768px) floating over the same photo blurred to a wash of colour, and on wide screens a sticky navigator panel (288px). A short question is set as the column's headline; a question with a reading passage (TKA style) reads passage (Body, 1.6 leading), then figure, then the question in 19–21px semibold, with numbered statements "(1) …" as a hanging list in body weight. Phones swap the panel for a bottom toolbar and a sheet. Admin switches between Paket soal and Berita with a segmented control in its bar; Paket soal is a split view (336px package source list plus detail) that becomes a push-navigation stack below 1024px.
 
 ## Elevation & Depth
 
@@ -256,8 +256,8 @@ Continuous, generous rounding in Apple proportions: 14px base, 18px inputs, 22px
 - **Grouped (Apple ID) fields:** stacked 56px fields in one 22px container with floating labels; the last field carries a circular arrow submit button. A wrong code or password shakes the group.
 
 ### Navigation
-- **Top bar:** 52px frosted bar, app icon plus wordmark, 13px links; the active app tab sits in a translucent pill.
-- **Phone tab bar:** frosted, 56px, two icon-plus-label tabs, active in Action Blue.
+- **Top bar:** 52px frosted bar, app icon plus lowercase wordmark "lulustes", 13px links (Hari ini · Latihan · Berita); the active tab sits in a translucent pill. Phones hide the links and use the tab bar.
+- **Phone tab bar:** frosted, 56px, three icon-plus-label tabs (Hari ini, Latihan, Berita), active in Link Blue so the 11px label clears 4.5:1 on both the light and the dark bar. Neither bar prints.
 - **Account menu:** avatar trigger, frosted rounded menu with the name and @username on top.
 
 ### Device Stage (landing signature)
@@ -272,7 +272,27 @@ Sideways cards with snap, a phone rising out of each card's bottom edge, a dot p
 - **Timer pill:** a draining 18px ring plus a tabular clock; gray at rest, orange under five minutes, red with a pulsing dot in the last minute. On start, the intro's full 236px ring turns into this pill through a view transition.
 - **Navigator grid:** rounded squares; blue for answered, orange for ragu-ragu, translucent for empty, with an ink ring on the current question.
 - **Score ring:** an activity-ring arc in green, blue or orange by score band, drawn while the number counts up.
-- **Podium:** the top three on pedestals ordered 2·1·3 with medal rings and a crown for first; the rest of the ranks as a grouped inset list, with the viewer's row tinted and pinned when it falls outside the top ten.
+- **Podium:** the top three on pedestals ordered 2·1·3 with medal rings and a crown for first; the rest of the ranks as a grouped inset list, with the viewer's row tinted and pinned when it falls outside the top ten. The board ranks each participant's first attempt.
+
+### Routine (signature)
+- **Hari ini:** the light home of the working world. Large title "Hari ini" with the greeting and the WIB date; a wide package card (subject photo with track, soal and duration chips; description; one state: Kerjakan sekarang, a running timer pill with Lanjutkan, or a green check with "Paket hari ini selesai" and Lihat pembahasan); beside it a sticky streak card; below, today's podium and the latest news.
+- **Streak card:** the number set large (56px, tabular) running into the words "hari beruntun", one line on what keeps it, the week strip, and a hairline footnote with the rule (sent on its own day, WIB; a day without a package never breaks it).
+- **Week Strip:** seven columns, oldest first: weekday, a 36px circle, date. A filled Action Blue circle with a white check for a kept day; a 2px blue ring for today's package still open; an empty translucent well for a missed package; a small tertiary dot for a day without one. Today's labels go to ink. Each day has a spoken label. A compact 24px variant sits inside the device screens.
+
+### Review (signature)
+- **Report:** a white card titled "Laporan": the score large with "% benar", Benar / Salah / Kosong counts with state dots, one proportional bar, a per-subtes table (score, percent, band-colored bar) when the package names subtes, and a hairline-separated footnote with the board position (first attempt only) and the weakest subtes to revisit.
+- **Review card:** number, a status chip (green Benar with a check, red Salah with an X, gray Kosong with a dash) and the subtes, then the question exactly as in the exam a step smaller, then static option rows: the key in a green tint with a green check and "Kunci", a wrong pick in a red tint with a red X and "Jawabanmu", a right pick saying "Jawabanmu, benar". Kategori questions list each statement with the chosen category pill and, when wrong, a green "Kunci: …" pill. The explanation sits last in a Page Gray panel under a small "Pembahasan" label.
+- **Filter:** a segmented control (Semua · Salah · Kosong · Benar, with counts) beside the "Pembahasan" heading; it narrows the screen only.
+- **PDF:** "Unduh PDF" is the page's primary action and opens the browser's print dialog. The print stylesheet (A4, 14mm margins, white ground, exact colors) drops the bars, controls and shadows, adds a small brand header, prints every question whatever the filter shows, and keeps each question card from splitting across pages.
+
+### Charts (landing research)
+- **Drawn 1:1.** Each chart measures its container and draws its SVG at that width, so axis and label text keep their real 11–12px on a phone instead of shrinking with a viewBox.
+- **Emphasis palette.** The series lulustes stands for is Link Blue; the comparison is Chart Muted (#8e8e93, `--chart-muted`), a deliberate de-emphasis gray. Text never takes a series color.
+- **Marks.** 2px round lines; 24px columns with a 4px rounded data end, square on the baseline, a 2px gap between neighbours; markers 5px with a 2px card-colored ring; solid hairline gridlines; the observed window as a 5% foreground wash.
+- **Reading values.** A legend above every chart with two or more series; selective direct labels (column caps, the three 95% points); a crosshair or band hover with one tooltip listing every series (value first, label after), the same on keyboard focus; and a "Lihat angkanya" table under every chart. Curves that come from a model say so in the caption.
+
+### News
+- **News list:** one grouped inset list; each row is a link to the source in a new tab: date and track in 12px, the title in 17px semibold, a two-line summary, the source name in Link Blue, and an up-right arrow. No item restates an announcement without its source.
 
 ## Do's and Don'ts
 
@@ -285,7 +305,8 @@ Sideways cards with snap, a phone rising out of each card's bottom edge, a dot p
 - **Do** use `overflow-x: clip`, not `overflow: hidden`, on ancestors of scroll-timeline elements, so the timeline still tracks the viewport.
 
 ### Don't:
-- **Don't** put working pages (catalog, exam, admin) in the dark world, or the landing in the light one.
+- **Don't** put working pages (Hari ini, Latihan, Berita, exam, review, admin) in the dark world, or the landing in the light one.
+- **Don't** reward the streak with flames, confetti or other game trophies; the count and the week strip carry it.
 - **Don't** put a kicker or eyebrow label above any heading.
 - **Don't** use emoji or Unicode glyphs as icons; use Lucide icons at a consistent stroke.
 - **Don't** reintroduce the retired cream-paper look: Lora or other serif display, gold underlines, warm paper grounds.

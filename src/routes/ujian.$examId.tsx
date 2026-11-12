@@ -13,7 +13,7 @@ export const Route = createFileRoute("/ujian/$examId")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Ujian Berlangsung — TryOutKu" },
+      { title: "Ujian Berlangsung — lulustes" },
       { name: "description", content: "Kerjakan soal try out sebelum waktu habis." },
       { name: "robots", content: "noindex" },
     ],
@@ -38,13 +38,19 @@ function UjianPage() {
     async (answers: Record<string, Answer>, nama: string) => {
       await submitAsGuest(examId, answers, nama);
       await queryClient.invalidateQueries({ queryKey: ["catalog"] });
+      await queryClient.invalidateQueries({ queryKey: ["daily"] });
       await queryClient.invalidateQueries({ queryKey: ["hasil", examId] });
       navigate({ to: "/hasil/$examId", params: { examId }, search: { baru: true }, replace: true });
     },
     [examId, navigate, queryClient],
   );
 
-  const backToCatalog = useCallback(() => navigate({ to: "/katalog" }), [navigate]);
+  // A daily package belongs to Hari ini; everything else to Latihan.
+  const daily = !!data?.exam.dailyDate;
+  const backToCatalog = useCallback(
+    () => navigate({ to: daily ? "/hari-ini" : "/katalog" }),
+    [navigate, daily],
+  );
 
   if (isLoading) {
     return (
@@ -57,8 +63,8 @@ function UjianPage() {
   if (isError || !data?.exam) {
     return (
       <Unavailable
-        title="Mata pelajaran ini tidak ditemukan."
-        body="Mungkin katalognya sudah dihapus admin."
+        title="Paket ini tidak ditemukan."
+        body="Mungkin paketnya sudah dihapus admin, atau paket harian ini belum terbit."
         onBack={backToCatalog}
       />
     );
@@ -67,7 +73,7 @@ function UjianPage() {
   if (data.questions.length === 0) {
     return (
       <Unavailable
-        title="Katalog ini belum punya soal."
+        title="Paket ini belum punya soal."
         body="Admin belum menambahkan soal. Coba lagi nanti, ya."
         onBack={backToCatalog}
       />
@@ -83,6 +89,7 @@ function UjianPage() {
         defaultName={lastName}
         onSubmit={onSubmit}
         onExit={backToCatalog}
+        exitLabel={daily ? "Hari ini" : "Latihan"}
       />
     </div>
   );
@@ -98,7 +105,7 @@ function Unavailable({ title, body, onBack }: { title: string; body: string; onB
         <h1 className="type-title-3 mt-6">{title}</h1>
         <p className="type-callout mt-2 text-muted-foreground">{body}</p>
         <Button className="mt-8" variant="secondary" onClick={onBack}>
-          Kembali ke katalog
+          Kembali
         </Button>
       </div>
     </div>
