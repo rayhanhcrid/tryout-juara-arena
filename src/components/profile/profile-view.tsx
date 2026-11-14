@@ -25,12 +25,13 @@ export function ProfileView({
   guest: Guest | null | undefined;
   /** undefined while loading; null when the browser's key no longer checks out. */
   profile: Profile | null | undefined;
-  failed: boolean;
+  /** Why the profile could not load, or null. */
+  failed: string | null;
   onSignOut: () => void;
   signingOut: boolean;
 }) {
   if (guest === null) return <NoProfile />;
-  if (failed) return <LoadFailed />;
+  if (failed) return <LoadFailed message={failed} />;
   if (guest === undefined || profile === undefined) return <ProfileSkeleton />;
   if (profile === null) return <Expired />;
 
@@ -274,12 +275,16 @@ function Expired() {
   );
 }
 
-function LoadFailed() {
+function LoadFailed({ message }: { message: string }) {
   return (
     <Centered
       icon={CloudOff}
       title="Profil tidak bisa dimuat."
-      body="Server sedang tidak bisa membaca database. Coba muat ulang halaman sebentar lagi."
+      body={
+        message.startsWith("Fitur akun")
+          ? message
+          : "Server sedang tidak bisa membaca database. Coba muat ulang halaman sebentar lagi."
+      }
     />
   );
 }

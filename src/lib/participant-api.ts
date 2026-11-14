@@ -427,8 +427,20 @@ export async function fetchNews(limit = 50): Promise<NewsItem[]> {
 
 export type Account = { id: string; nama: string; username: string };
 
+/**
+ * The database does not have the account functions yet: PostgREST answers
+ * PGRST202 ("function not found") until migration 0007 is applied.
+ */
+function isMissingFunction(error: { code?: string }): boolean {
+  return error.code === "PGRST202" || error.code === "42883";
+}
+
+const ACCOUNTS_NOT_READY =
+  "Fitur akun belum aktif di server: migrasi database 0007_akun_profil.sql belum dijalankan.";
+
 /** Messages the account functions raise are already written for people. */
 function accountError(error: { code?: string; message: string }, fallback: string): Error {
+  if (isMissingFunction(error)) return new Error(ACCOUNTS_NOT_READY);
   const readable = ["22023", "23505", "28P01"].includes(error.code ?? "");
   return new Error(readable ? error.message : fallback);
 }
@@ -569,7 +581,8 @@ export async function fetchProfile(guest: GuestCred): Promise<Profile | null> {
     p_guest_id: guest.id,
     p_guest_key: guest.key,
   });
-  if (error) throw new Error("Gagal memuat profil.");
+  if (error)
+    throw new Error(isMissingFunction(error) ? ACCOUNTS_NOT_READY : "Gagal memuat profil.");
   if (!data) return null;
   const p = data as unknown as ProfilePayload;
   return {

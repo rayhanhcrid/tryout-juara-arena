@@ -50,7 +50,7 @@ function ProfilPage() {
       <ProfileView
         guest={guest}
         profile={guest ? profile.data : undefined}
-        failed={profile.isError}
+        failed={profile.error ? profile.error.message : null}
         onSignOut={() => void handleSignOut()}
         signingOut={signingOut}
       />
