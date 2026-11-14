@@ -1,5 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
-import { newGuestKey, reusableGuest, saveGuest, type Guest } from "@/lib/exam-session";
+import {
+  forgetGuest,
+  newGuestKey,
+  readGuest,
+  reusableGuest,
+  saveGuest,
+  type Guest,
+} from "@/lib/exam-session";
 import { isBundledImage } from "@/lib/question-format";
 import {
   isQuestionKind,
@@ -11,8 +18,8 @@ import { toTrack, type Track } from "@/lib/tracks";
 
 /**
  * Everything a participant does, through database functions callable with
- * the publishable key (see drizzle/migrations/0001_public_guest_access.sql
- * and 0006_lulustes_daily.sql). No server secret is involved, so this works
+ * the publishable key (see drizzle/migrations/0001_public_guest_access.sql,
+ * 0006_lulustes_daily.sql and 0007_akun_profil.sql). No server secret is involved, so this works
  * on Lovable, Vercel and locally; answer keys stay in the database, which
  * also does the grading, and only come back for the guest's own attempts.
  */
@@ -194,7 +201,9 @@ export async function submitAsGuest(
   }
   const row = data?.[0];
   if (!row) throw new Error("Gagal mengirim jawaban.");
-  saveGuest({ id: row.guest_id, key, nama: row.nama });
+  // A signed-in browser stays signed in to the same account.
+  const username = reuse?.id === row.guest_id ? reuse.username : undefined;
+  saveGuest({ id: row.guest_id, key, nama: row.nama, ...(username ? { username } : {}) });
   return { attemptId: row.attempt_id, score: row.score, total: row.total, nama: row.nama };
 }
 
@@ -412,4 +421,185 @@ export async function fetchNews(limit = 50): Promise<NewsItem[]> {
     track: toTrack(n.track),
     publishedOn: n.published_on,
   }));
+}
+
+// ---------- Accounts (optional) ----------
+
+export type Account = { id: string; nama: string; username: string };
+
+/** Messages the account functions raise are already written for people. */
+function accountError(error: { code?: string; message: string }, fallback: string): Error {
+  const readable = ["22023", "23505", "28P01"].includes(error.code ?? "");
+  return new Error(readable ? error.message : fallback);
+}
+
+/**
+ * Create an account. A plain guest on this browser becomes the account, so
+ * its history and streak come along; otherwise a new participant starts.
+ */
+export async function registerAccount(input: {
+  username: string;
+  password: string;
+  nama: string;
+}): Promise<Account> {
+  const current = readGuest();
+  const claim = current && !current.username ? current : null;
+  const key = claim?.key ?? newGuestKey();
+  const { data, error } = await supabase.rpc("register_account", {
+    p_username: input.username,
+    p_password: input.password,
+    p_nama: input.nama,
+    p_guest_key: key,
+    ...(claim ? { p_guest_id: claim.id } : {}),
+  });
+  if (error) throw accountError(error, "Gagal membuat akun. Coba lagi sebentar lagi.");
+  const row = data?.[0];
+  if (!row) throw new Error("Gagal membuat akun. Coba lagi sebentar lagi.");
+  saveGuest({ id: row.guest_id, key, nama: row.nama, username: row.username });
+  return { id: row.guest_id, nama: row.nama, username: row.username };
+}
+
+/**
+ * Sign in from this browser; it gets a key of its own. A plain guest on this
+ * browser hands its attempts to the account, so a score just sent is kept.
+ */
+export async function signIn(username: string, password: string): Promise<Account> {
+  const key = newGuestKey();
+  const current = readGuest();
+  const merge = current && !current.username ? current : null;
+  const { data, error } = await supabase.rpc("login_account", {
+    p_username: username,
+    p_password: password,
+    p_new_key: key,
+    ...(merge ? { p_guest_id: merge.id, p_guest_key: merge.key } : {}),
+  });
+  if (error)
+    throw accountError(error, "Tidak bisa masuk sekarang. Periksa koneksi, lalu coba lagi.");
+  const row = data?.[0];
+  if (!row) throw new Error("Tidak bisa masuk sekarang. Coba lagi sebentar lagi.");
+  saveGuest({ id: row.guest_id, key, nama: row.nama, username: row.username });
+  return { id: row.guest_id, nama: row.nama, username: row.username };
+}
+
+/** Sign this browser out. Forgetting locally is what matters; the server call is best effort. */
+export async function signOut(): Promise<void> {
+  const g = readGuest();
+  forgetGuest();
+  if (!g?.username) return;
+  try {
+    await supabase.rpc("logout_account", { p_guest_id: g.id, p_guest_key: g.key });
+  } catch {
+    // Offline: the key is gone from this browser anyway.
+  }
+}
+
+// ---------- Profile ----------
+
+export type ProfileDay = {
+  /** The package's date, "YYYY-MM-DD". */
+  date: string;
+  examId: string;
+  title: string;
+  /** The first attempt at it, the one the board counts; null when not done. */
+  attemptId: string | null;
+  score: number | null;
+  total: number | null;
+  /** Sent on its own day (WIB), so it counts toward the streak. */
+  onTime: boolean;
+};
+
+export type ProfileAttempt = {
+  attemptId: string;
+  examId: string;
+  title: string;
+  dailyDate: string | null;
+  score: number;
+  total: number;
+  submittedAt: string;
+};
+
+export type Profile = {
+  today: string;
+  guest: { id: string; nama: string; username: string | null; joined: string };
+  streak: { current: number; best: number };
+  /** The last seven days, as on Hari ini. */
+  week: DailyDay[];
+  totals: {
+    attempts: number;
+    packages: number;
+    /** Mean % of first attempts, or null before any. */
+    average: number | null;
+    best: number | null;
+  };
+  /** Package days, oldest first. */
+  days: ProfileDay[];
+  /** Latest attempts at any package, newest first. */
+  recent: ProfileAttempt[];
+};
+
+type ProfilePayload = {
+  today: string;
+  guest: { id: string; nama: string; username: string | null; joined: string };
+  streak: { current: number; best: number } | null;
+  week: DailyDay[];
+  totals: { attempts: number; packages: number; average: number | null; best: number | null };
+  days: {
+    date: string;
+    exam_id: string;
+    title: string;
+    attempt_id: string | null;
+    score: number | null;
+    total: number | null;
+    on_time: boolean;
+  }[];
+  recent: {
+    attempt_id: string;
+    exam_id: string;
+    title: string;
+    daily_date: string | null;
+    score: number;
+    total: number;
+    submitted_at: string;
+  }[];
+};
+
+/** This browser's participant dashboard; null when its key no longer checks out. */
+export async function fetchProfile(guest: GuestCred): Promise<Profile | null> {
+  const { data, error } = await supabase.rpc("get_profile", {
+    p_guest_id: guest.id,
+    p_guest_key: guest.key,
+  });
+  if (error) throw new Error("Gagal memuat profil.");
+  if (!data) return null;
+  const p = data as unknown as ProfilePayload;
+  return {
+    today: p.today,
+    guest: {
+      id: p.guest.id,
+      nama: p.guest.nama,
+      username: p.guest.username ?? null,
+      joined: p.guest.joined,
+    },
+    streak: p.streak ?? { current: 0, best: 0 },
+    week: p.week ?? [],
+    totals: p.totals ?? { attempts: 0, packages: 0, average: null, best: null },
+    days: (p.days ?? []).map((d) => ({
+      date: d.date,
+      examId: d.exam_id,
+      title: d.title,
+      attemptId: d.attempt_id ?? null,
+      score: d.score ?? null,
+      total: d.total ?? null,
+      onTime: d.on_time === true,
+    })),
+    recent: (p.recent ?? []).map((r) => ({
+      attemptId: r.attempt_id,
+      examId: r.exam_id,
+      title: r.title,
+      dailyDate: r.daily_date ?? null,
+      score: r.score,
+      total: r.total,
+      submittedAt: r.submitted_at,
+    })),
+  };
 }

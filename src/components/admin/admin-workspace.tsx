@@ -24,6 +24,7 @@ import { CatalogCover, CoverMark, catalogCoverClass } from "@/components/catalog
 import { SegmentedControl } from "@/components/segmented-control";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { dailyCountNote } from "@/lib/daily-package";
 import { formatDay, formatDuration } from "@/lib/format";
 import { splitQuestionText } from "@/lib/question-format";
 import { LETTERS, kindLabel, type AnswerKey, type QuestionKind } from "@/lib/question-kinds";
@@ -388,6 +389,7 @@ function ExamDetail({
         <div>
           <h2 className="type-title-2">Soal</h2>
           <p className="tabular mt-1 text-[13px] text-muted-foreground">
+            {exam.daily_date ? `${dailyCountNote(questions.length)} ` : ""}
             Urutan di sini adalah urutan yang dilihat peserta.
           </p>
         </div>

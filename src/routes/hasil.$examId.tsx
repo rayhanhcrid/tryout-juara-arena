@@ -78,6 +78,7 @@ function HasilPage() {
           meId={data.meId}
           fresh={!!baru}
           guestName={guestName}
+          signedIn={!!guest?.username}
           streak={streak}
           back={back}
         />

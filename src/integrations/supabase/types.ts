@@ -102,20 +102,40 @@ export type Database = {
           id: string;
           key_hash: string;
           nama: string;
+          password_hash: string | null;
+          username: string | null;
         };
         Insert: {
           created_at?: string;
           id?: string;
           key_hash: string;
           nama: string;
+          password_hash?: string | null;
+          username?: string | null;
         };
         Update: {
           created_at?: string;
           id?: string;
           key_hash?: string;
           nama?: string;
+          password_hash?: string | null;
+          username?: string | null;
         };
         Relationships: [];
+      };
+      guest_keys: {
+        Row: { created_at: string; guest_id: string; key_hash: string };
+        Insert: { created_at?: string; guest_id: string; key_hash: string };
+        Update: { created_at?: string; guest_id?: string; key_hash?: string };
+        Relationships: [
+          {
+            foreignKeyName: "guest_keys_guest_id_fkey";
+            columns: ["guest_id"];
+            isOneToOne: false;
+            referencedRelation: "guests";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       news: {
         Row: {
@@ -284,6 +304,34 @@ export type Database = {
           submitted_at: string;
           total: number;
         }[];
+      };
+      get_profile: {
+        Args: { p_guest_id: string; p_guest_key: string };
+        Returns: Json;
+      };
+      login_account: {
+        Args: {
+          p_guest_id?: string;
+          p_guest_key?: string;
+          p_new_key: string;
+          p_password: string;
+          p_username: string;
+        };
+        Returns: { guest_id: string; nama: string; username: string }[];
+      };
+      logout_account: {
+        Args: { p_guest_id: string; p_guest_key: string };
+        Returns: undefined;
+      };
+      register_account: {
+        Args: {
+          p_guest_id?: string;
+          p_guest_key: string;
+          p_nama: string;
+          p_password: string;
+          p_username: string;
+        };
+        Returns: { guest_id: string; nama: string; username: string }[];
       };
       submit_attempt: {
         Args: {

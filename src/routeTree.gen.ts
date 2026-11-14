@@ -16,7 +16,9 @@ import { Route as BeritaRouteImport } from './routes/berita'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as HariIniRouteImport } from './routes/hari-ini'
 import { Route as KatalogRouteImport } from './routes/katalog'
+import { Route as MasukRouteImport } from './routes/masuk'
 import { Route as PeringkatRouteImport } from './routes/peringkat'
+import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as HasilExamIdRouteImport } from './routes/hasil.$examId'
 import { Route as PembahasanAttemptIdRouteImport } from './routes/pembahasan.$attemptId'
 import { Route as PeringkatIndexRouteImport } from './routes/peringkat.index'
@@ -58,9 +60,19 @@ const KatalogRoute = KatalogRouteImport.update({
   path: '/katalog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MasukRoute = MasukRouteImport.update({
+  id: '/masuk',
+  path: '/masuk',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PeringkatRoute = PeringkatRouteImport.update({
   id: '/peringkat',
   path: '/peringkat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfilRoute = ProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HasilExamIdRoute = HasilExamIdRouteImport.update({
@@ -97,7 +109,9 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/hari-ini': typeof HariIniRoute
   '/katalog': typeof KatalogRoute
+  '/masuk': typeof MasukRoute
   '/peringkat': typeof PeringkatRouteWithChildren
+  '/profil': typeof ProfilRoute
   '/hasil/$examId': typeof HasilExamIdRoute
   '/pembahasan/$attemptId': typeof PembahasanAttemptIdRoute
   '/peringkat/$examId': typeof PeringkatExamIdRoute
@@ -112,6 +126,8 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/hari-ini': typeof HariIniRoute
   '/katalog': typeof KatalogRoute
+  '/masuk': typeof MasukRoute
+  '/profil': typeof ProfilRoute
   '/hasil/$examId': typeof HasilExamIdRoute
   '/pembahasan/$attemptId': typeof PembahasanAttemptIdRoute
   '/peringkat/$examId': typeof PeringkatExamIdRoute
@@ -127,7 +143,9 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/hari-ini': typeof HariIniRoute
   '/katalog': typeof KatalogRoute
+  '/masuk': typeof MasukRoute
   '/peringkat': typeof PeringkatRouteWithChildren
+  '/profil': typeof ProfilRoute
   '/hasil/$examId': typeof HasilExamIdRoute
   '/pembahasan/$attemptId': typeof PembahasanAttemptIdRoute
   '/peringkat/$examId': typeof PeringkatExamIdRoute
@@ -144,7 +162,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/hari-ini'
     | '/katalog'
+    | '/masuk'
     | '/peringkat'
+    | '/profil'
     | '/hasil/$examId'
     | '/pembahasan/$attemptId'
     | '/peringkat/$examId'
@@ -159,6 +179,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/hari-ini'
     | '/katalog'
+    | '/masuk'
+    | '/profil'
     | '/hasil/$examId'
     | '/pembahasan/$attemptId'
     | '/peringkat/$examId'
@@ -173,7 +195,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/hari-ini'
     | '/katalog'
+    | '/masuk'
     | '/peringkat'
+    | '/profil'
     | '/hasil/$examId'
     | '/pembahasan/$attemptId'
     | '/peringkat/$examId'
@@ -189,7 +213,9 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   HariIniRoute: typeof HariIniRoute
   KatalogRoute: typeof KatalogRoute
+  MasukRoute: typeof MasukRoute
   PeringkatRoute: typeof PeringkatRouteWithChildren
+  ProfilRoute: typeof ProfilRoute
   HasilExamIdRoute: typeof HasilExamIdRoute
   PembahasanAttemptIdRoute: typeof PembahasanAttemptIdRoute
   UjianExamIdRoute: typeof UjianExamIdRoute
@@ -246,11 +272,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/masuk': {
+      id: '/masuk'
+      path: '/masuk'
+      fullPath: '/masuk'
+      preLoaderRoute: typeof MasukRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/peringkat': {
       id: '/peringkat'
       path: '/peringkat'
       fullPath: '/peringkat'
       preLoaderRoute: typeof PeringkatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profil': {
+      id: '/profil'
+      path: '/profil'
+      fullPath: '/profil'
+      preLoaderRoute: typeof ProfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hasil/$examId': {
@@ -313,7 +353,9 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   HariIniRoute: HariIniRoute,
   KatalogRoute: KatalogRoute,
+  MasukRoute: MasukRoute,
   PeringkatRoute: PeringkatRouteWithChildren,
+  ProfilRoute: ProfilRoute,
   HasilExamIdRoute: HasilExamIdRoute,
   PembahasanAttemptIdRoute: PembahasanAttemptIdRoute,
   UjianExamIdRoute: UjianExamIdRoute,

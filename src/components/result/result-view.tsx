@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpenCheck, ChevronLeft, ChevronRight, RotateCcw, Trophy } from "lucide-react";
+import { BookOpenCheck, ChevronLeft, ChevronRight, LogIn, RotateCcw, Trophy } from "lucide-react";
 import { Leaderboard, type BoardEntry } from "@/components/leaderboard";
 import { ScoreRing, useCountUp } from "@/components/score-ring";
 import { buttonVariants } from "@/components/ui/button";
@@ -45,6 +45,7 @@ export function ResultView({
   meId,
   fresh,
   guestName,
+  signedIn = false,
   streak,
   back,
 }: {
@@ -56,6 +57,8 @@ export function ResultView({
   /** True right after submitting: the ring shows this attempt, not the best one. */
   fresh: boolean;
   guestName: string | null;
+  /** This browser is signed in to an account; otherwise the score moment offers to save it. */
+  signedIn?: boolean;
   /** Days in a row, shown when this is today's package. */
   streak: number | null;
   back: ResultBack;
@@ -91,6 +94,7 @@ export function ResultView({
           rank={myRank?.rank ?? null}
           participants={leaderboard.length}
           guestName={guestName}
+          signedIn={signedIn}
           streak={streak}
           back={back}
         />
@@ -211,6 +215,7 @@ function ScoreMoment({
   rank,
   participants,
   guestName,
+  signedIn,
   streak,
   back,
 }: {
@@ -224,6 +229,7 @@ function ScoreMoment({
   rank: number | null;
   participants: number;
   guestName: string | null;
+  signedIn: boolean;
   streak: number | null;
   back: ResultBack;
 }) {
@@ -316,6 +322,27 @@ function ScoreMoment({
         {back.to === "/hari-ini" ? "Kembali ke Hari ini" : "Paket lainnya"}{" "}
         <ChevronRight className="h-4 w-4" />
       </Link>
+
+      {!signedIn ? (
+        <div className="mt-10 flex w-full max-w-lg flex-col items-center gap-4 rounded-2xl bg-card px-5 py-5 sm:flex-row sm:text-left">
+          <p className="type-callout flex-1 text-muted-foreground">
+            Simpan skor ini ke akun supaya hari beruntun dan riwayatmu bisa dibuka dari perangkat
+            lain.
+          </p>
+          <div className="flex shrink-0 items-center gap-4">
+            <Link to="/masuk" className={buttonVariants({ variant: "tinted", size: "sm" })}>
+              <LogIn /> Masuk
+            </Link>
+            <Link
+              to="/masuk"
+              search={{ mode: "daftar" }}
+              className="text-[13px] font-medium text-link hover:underline"
+            >
+              Buat akun
+            </Link>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

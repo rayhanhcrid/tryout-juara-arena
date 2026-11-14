@@ -27,21 +27,29 @@ export function deviceId(): string {
 }
 
 /**
- * The participant who last submitted from this browser: the guest id the
- * database issued, and the secret key only this browser knows (the database
- * stores just its hash).
+ * The participant on this browser: the guest id the database issued, and the
+ * secret key only this browser knows (the database stores just its hash).
+ * `username` is set when this browser is signed in to an account.
  */
-export type Guest = { nama: string; id: string; key: string };
+export type Guest = { nama: string; id: string; key: string; username?: string };
 
 export function readGuest(): Guest | null {
   const g = storageGetJSON<Partial<Guest>>(GUEST_KEY);
-  return g && typeof g.nama === "string" && typeof g.id === "string" && typeof g.key === "string"
-    ? { nama: g.nama, id: g.id, key: g.key }
-    : null;
+  if (!g || typeof g.nama !== "string" || typeof g.id !== "string" || typeof g.key !== "string") {
+    return null;
+  }
+  const guest: Guest = { nama: g.nama, id: g.id, key: g.key };
+  if (typeof g.username === "string" && g.username) guest.username = g.username;
+  return guest;
 }
 
 export function saveGuest(guest: Guest): void {
   storageSet(GUEST_KEY, JSON.stringify(guest));
+}
+
+/** Sign out: this browser no longer knows who it was. */
+export function forgetGuest(): void {
+  storageRemove(GUEST_KEY);
 }
 
 export function sameName(a: string, b: string): boolean {
@@ -50,12 +58,14 @@ export function sameName(a: string, b: string): boolean {
 }
 
 /**
- * The saved guest to submit as: reused only when the same name is typed
- * again, so classmates sharing a lab computer stay separate people.
+ * The saved guest to submit as. A signed-in account always is; a plain guest
+ * only when the same name is typed again, so classmates sharing a lab
+ * computer stay separate people.
  */
 export function reusableGuest(nama: string): Guest | null {
   const g = readGuest();
-  return g && sameName(g.nama, nama) ? g : null;
+  if (!g) return null;
+  return g.username || sameName(g.nama, nama) ? g : null;
 }
 
 /** A fresh 256-bit secret for a new guest. */

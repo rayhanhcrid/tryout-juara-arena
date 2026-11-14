@@ -4,6 +4,7 @@ import {
   BookOpenCheck,
   ChevronLeft,
   ChevronRight,
+  CircleUserRound,
   FileText,
   Flag,
   LayoutGrid,
@@ -105,6 +106,7 @@ export function ExamRunner({
   questions,
   ownerId,
   defaultName,
+  account = null,
   onSubmit,
   onExit,
   exitLabel,
@@ -115,6 +117,8 @@ export function ExamRunner({
   ownerId: string;
   /** Name last used on this browser, offered in the intro. */
   defaultName: string;
+  /** The signed-in account, whose name is used as it is. */
+  account?: { nama: string; username: string } | null;
   /** Sends the answers under the participant's name; throws on failure. */
   onSubmit: (answers: Answers, nama: string) => Promise<void>;
   onExit: () => void;
@@ -352,6 +356,7 @@ export function ExamRunner({
         exam={exam}
         questions={questions}
         defaultName={nama}
+        account={account}
         onStart={start}
         onBack={onExit}
         backLabel={exitLabel}
@@ -667,6 +672,7 @@ function ExamIntro({
   exam,
   questions,
   defaultName,
+  account,
   onStart,
   onBack,
   backLabel,
@@ -674,13 +680,14 @@ function ExamIntro({
   exam: RunnerExam;
   questions: RunnerQuestion[];
   defaultName: string;
+  account: { nama: string; username: string } | null;
   onStart: (name: string) => void;
   onBack: () => void;
   backLabel: string;
 }) {
-  const [name, setName] = useState(defaultName);
+  const [name, setName] = useState(account?.nama ?? defaultName);
   const [touched, setTouched] = useState(false);
-  const clean = name.trim().replace(/\s+/g, " ").slice(0, 40);
+  const clean = (account?.nama ?? name).trim().replace(/\s+/g, " ").slice(0, 40);
   const valid = clean.length >= 2;
 
   const size = 168;
@@ -789,32 +796,49 @@ function ExamIntro({
             </div>
           </div>
 
-          <div className="mt-7">
-            <FieldGroup shake={false}>
-              <FloatingField
-                label="Namamu"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onBlur={() => setTouched(true)}
-                autoComplete="name"
-                maxLength={40}
-                autoFocus={!defaultName}
-                aria-invalid={touched && !valid}
-                aria-describedby="nama-hint"
-              />
-            </FieldGroup>
-            <p
-              id="nama-hint"
-              className={cn(
-                "mt-2 px-1 text-[13px]",
-                touched && !valid ? "text-destructive-ink" : "text-muted-foreground",
-              )}
-            >
-              {touched && !valid
-                ? "Tulis namamu dulu, minimal 2 huruf."
-                : "Nama ini yang tampil di papan peringkat."}
-            </p>
-          </div>
+          {account ? (
+            <div className="mt-7">
+              <div className="flex h-14 items-center gap-3 rounded-2xl border border-input bg-card px-4">
+                <CircleUserRound aria-hidden className="h-5 w-5 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[17px]">{account.nama}</span>
+                  <span className="block truncate text-[12px] text-muted-foreground">
+                    @{account.username}
+                  </span>
+                </span>
+              </div>
+              <p className="mt-2 px-1 text-[13px] text-muted-foreground">
+                Kamu mengerjakan dengan akunmu; skornya masuk ke profil.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-7">
+              <FieldGroup shake={false}>
+                <FloatingField
+                  label="Namamu"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={() => setTouched(true)}
+                  autoComplete="name"
+                  maxLength={40}
+                  autoFocus={!defaultName}
+                  aria-invalid={touched && !valid}
+                  aria-describedby="nama-hint"
+                />
+              </FieldGroup>
+              <p
+                id="nama-hint"
+                className={cn(
+                  "mt-2 px-1 text-[13px]",
+                  touched && !valid ? "text-destructive-ink" : "text-muted-foreground",
+                )}
+              >
+                {touched && !valid
+                  ? "Tulis namamu dulu, minimal 2 huruf."
+                  : "Nama ini yang tampil di papan peringkat."}
+              </p>
+            </div>
+          )}
           <Button type="submit" size="lg" className="mt-6 w-full" disabled={touched && !valid}>
             Mulai ujian
           </Button>

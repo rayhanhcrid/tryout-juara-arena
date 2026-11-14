@@ -1,20 +1,36 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarCheck2, LayoutGrid, Newspaper, type LucideIcon } from "lucide-react";
+import {
+  CalendarCheck2,
+  CircleUserRound,
+  LayoutGrid,
+  LogIn,
+  Newspaper,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { BrandLink } from "@/components/brand";
 import { InitialsAvatar } from "@/components/initials-avatar";
-import { readGuest } from "@/lib/exam-session";
+import { buttonVariants } from "@/components/ui/button";
+import { readGuest, type Guest } from "@/lib/exam-session";
 import { cn } from "@/lib/utils";
+
+/**
+ * This browser's participant, read after mount (it lives in localStorage):
+ * undefined until then, null when there is none.
+ */
+export function useGuest(): Guest | null | undefined {
+  const [guest, setGuest] = useState<Guest | null | undefined>(undefined);
+  useEffect(() => setGuest(readGuest()), []);
+  return guest;
+}
 
 /** The name last used on this browser, read after mount (it lives in localStorage). */
 export function useGuestName(): string | null {
-  const [name, setName] = useState<string | null>(null);
-  useEffect(() => setName(readGuest()?.nama ?? null), []);
-  return name;
+  return useGuest()?.nama ?? null;
 }
 
 type Destination = {
-  to: "/hari-ini" | "/katalog" | "/berita";
+  to: "/hari-ini" | "/katalog" | "/berita" | "/profil";
   label: string;
   icon: LucideIcon;
   /** Path prefixes that count as being here. */
@@ -27,6 +43,14 @@ const DESTINATIONS: Destination[] = [
   { to: "/katalog", label: "Latihan", icon: LayoutGrid, match: ["/katalog", "/peringkat"] },
   { to: "/berita", label: "Berita", icon: Newspaper, match: ["/berita"] },
 ];
+
+/** Phones also get the profile as a tab; wide screens reach it from the avatar. */
+const PROFILE_TAB: Destination = {
+  to: "/profil",
+  label: "Profil",
+  icon: CircleUserRound,
+  match: ["/profil", "/masuk"],
+};
 
 function isActive(pathname: string, d: Destination): boolean {
   return d.match.some((m) => pathname.startsWith(m));
@@ -46,7 +70,8 @@ export function AppShell({
   tone?: "light" | "dark";
   children: React.ReactNode;
 }) {
-  const guestName = useGuestName();
+  const guest = useGuest();
+  const onProfile = isActive(pathname, PROFILE_TAB);
 
   return (
     <div className={cn("min-h-screen bg-background", tone === "dark" && "page-dark dark")}>
@@ -73,12 +98,30 @@ export function AppShell({
               );
             })}
           </nav>
-          {guestName ? (
-            <div className="ml-auto flex items-center gap-2.5">
-              <span className="hidden max-w-48 truncate text-[13px] font-medium sm:inline">
-                {guestName}
-              </span>
-              <InitialsAvatar name={guestName} seed={guestName} size={30} />
+          {guest !== undefined ? (
+            <div className="-mr-1.5 ml-auto flex items-center gap-1.5">
+              {/* Anyone not signed in to an account can sign in from every page. */}
+              {!guest?.username && !pathname.startsWith("/masuk") ? (
+                <Link
+                  to="/masuk"
+                  className={buttonVariants({ variant: "tinted", size: "sm", className: "mr-1" })}
+                >
+                  <LogIn /> Masuk
+                </Link>
+              ) : null}
+              {guest ? (
+                <Link
+                  to="/profil"
+                  aria-current={onProfile ? "page" : undefined}
+                  className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-1 transition-colors duration-200 hover:bg-fill aria-[current=page]:bg-fill sm:pl-3"
+                >
+                  <span className="hidden max-w-48 truncate text-[13px] font-medium sm:inline">
+                    {guest.nama}
+                  </span>
+                  <span className="sr-only sm:hidden">Profil {guest.nama}</span>
+                  <InitialsAvatar name={guest.nama} seed={guest.nama} size={30} />
+                </Link>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -92,8 +135,8 @@ export function AppShell({
         aria-label="Navigasi utama"
         className="material-bar fixed inset-x-0 bottom-0 z-40 border-t border-hairline pb-[env(safe-area-inset-bottom)] sm:hidden print:hidden"
       >
-        <div className="mx-auto grid h-14 max-w-md grid-cols-3">
-          {DESTINATIONS.map((d) => {
+        <div className="mx-auto grid h-14 max-w-md grid-cols-4">
+          {[...DESTINATIONS, PROFILE_TAB].map((d) => {
             const active = isActive(pathname, d);
             return (
               <Link

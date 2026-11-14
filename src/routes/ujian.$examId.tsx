@@ -26,7 +26,9 @@ function UjianPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [owner] = useState(() => deviceId());
-  const [lastName] = useState(() => readGuest()?.nama ?? "");
+  const [saved] = useState(() => readGuest());
+  const lastName = saved?.nama ?? "";
+  const account = saved?.username ? { nama: saved.nama, username: saved.username } : null;
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["exam", examId],
@@ -40,6 +42,7 @@ function UjianPage() {
       await queryClient.invalidateQueries({ queryKey: ["catalog"] });
       await queryClient.invalidateQueries({ queryKey: ["daily"] });
       await queryClient.invalidateQueries({ queryKey: ["hasil", examId] });
+      await queryClient.invalidateQueries({ queryKey: ["profil"] });
       navigate({ to: "/hasil/$examId", params: { examId }, search: { baru: true }, replace: true });
     },
     [examId, navigate, queryClient],
@@ -87,6 +90,7 @@ function UjianPage() {
         questions={data.questions}
         ownerId={owner}
         defaultName={lastName}
+        account={account}
         onSubmit={onSubmit}
         onExit={backToCatalog}
         exitLabel={daily ? "Hari ini" : "Latihan"}

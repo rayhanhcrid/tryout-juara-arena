@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   clearSession,
+  forgetGuest,
   newGuestKey,
+  readGuest,
   readSession,
   reusableGuest,
   saveGuest,
@@ -91,5 +93,25 @@ describe("guest identity", () => {
     const a = newGuestKey();
     expect(a).toMatch(/^[0-9a-f]{64}$/);
     expect(newGuestKey()).not.toBe(a);
+  });
+});
+
+describe("account on this browser", () => {
+  it("always submits as the signed-in account, whatever name is typed", () => {
+    saveGuest({ nama: "Nadia Putri", id: "guest-1", key: "k".repeat(64), username: "nadia" });
+    expect(reusableGuest("Raka")?.id).toBe("guest-1");
+  });
+
+  it("reads the username back, and leaves it off a plain guest", () => {
+    saveGuest({ nama: "Nadia", id: "guest-1", key: "k".repeat(64), username: "nadia" });
+    expect(readGuest()?.username).toBe("nadia");
+    saveGuest({ nama: "Nadia", id: "guest-1", key: "k".repeat(64) });
+    expect(readGuest()).toEqual({ nama: "Nadia", id: "guest-1", key: "k".repeat(64) });
+  });
+
+  it("forgets the participant on sign-out", () => {
+    saveGuest({ nama: "Nadia", id: "guest-1", key: "k".repeat(64), username: "nadia" });
+    forgetGuest();
+    expect(readGuest()).toBeNull();
   });
 });

@@ -15,12 +15,14 @@ describe("App routing", () => {
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
 
-  // Every participant page is public now: no account, no auth layout in between.
+  // Every participant page is public: an account is optional, no auth layout in between.
   it.each([
     ["/admin", "/admin"],
     ["/katalog", "/katalog"],
     ["/hari-ini", "/hari-ini"],
     ["/berita", "/berita"],
+    ["/masuk", "/masuk"],
+    ["/profil", "/profil"],
     ["/pembahasan/abc", "/pembahasan/$attemptId"],
     ["/peringkat/abc", "/peringkat/$examId"],
     ["/ujian/abc", "/ujian/$examId"],

@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SegmentedControl } from "@/components/segmented-control";
+import { DAILY_QUESTION_COUNT } from "@/lib/daily-package";
 import { formatDay, todayWib } from "@/lib/format";
 import { TRACKS, trackLabel, type Track } from "@/lib/tracks";
 import { cn } from "@/lib/utils";
@@ -58,7 +59,8 @@ export function ExamFormDialog({
     if (!open) return;
     setTitle(initial?.title ?? "");
     setDescription(initial?.description ?? "");
-    setDuration(initial?.duration_minutes ?? 15);
+    // Fits a 25-question daily package at a little over a minute each.
+    setDuration(initial?.duration_minutes ?? 30);
     setFeatured(initial?.featured ?? false);
     setTrack(initial?.track ?? "cpns");
     setDaily(!!initial?.daily_date);
@@ -113,7 +115,7 @@ export function ExamFormDialog({
               id="exam-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="misal: Paket Harian SKD #2"
+              placeholder="misal: Paket Harian SKD #3"
               autoFocus
             />
           </div>
@@ -145,7 +147,7 @@ export function ExamFormDialog({
                 <Label htmlFor="exam-daily">Jadikan paket harian</Label>
                 <p id="exam-daily-hint" className="mt-0.5 text-[13px] text-muted-foreground">
                   Tampil di Hari ini pada tanggalnya, dan baru bisa dikerjakan mulai tanggal itu
-                  (WIB). Satu tanggal, satu paket.
+                  (WIB). Satu tanggal, satu paket, berisi {DAILY_QUESTION_COUNT} soal.
                 </p>
               </div>
               <Switch
